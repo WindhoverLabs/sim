@@ -524,6 +524,8 @@ int32 SIM::ListenerInit()
 		goto end_of_function;
 	}
 
+	SIMLIB_SetSocket(Socket);
+
 	ChildContinueFlag = true;
 
 	Status = CFE_ES_CreateChildTask(&ListenerTaskID,

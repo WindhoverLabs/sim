@@ -6,6 +6,8 @@
 #include "px4_msgs.h"
 #include "sim_mission_cfg.h"
 #include "sim_platform_cfg.h"
+#include "mavlink.h"
+#include <arpa/inet.h>
 
 /*************************************************************************
 ** Macro Definitions
@@ -111,6 +113,7 @@ typedef struct
 	SIMLIB_GPSData_t GPSData;
 	SIMLIB_RCInputData_t RCInputData;
 	SIMLIB_ActuatorControlsData_t ActuatorControlsData;
+    int Socket;
 } SIMLIB_LibData_t;
 
 SIMLIB_LibData_t SIMLIB_LibData;
@@ -152,6 +155,12 @@ int32 SIM_LibInit(void)
     return iStatus;
  
 }/* End SIM_LibInit */
+
+
+void SIMLIB_SetSocket(int Socket)
+{
+	SIMLIB_LibData.Socket = Socket;
+}
 
 int32 SIMLIB_GetAccel(float *X, float *Y, float *Z)
 {
@@ -499,23 +508,29 @@ int32 SIMLIB_SetGPS(
 
 
 int32 SIMLIB_GetRCInputs(
-		uint16 *Channel[12],
+		uint16 *Channels,
+		uint16 *ChannelCount,
 		uint8  *RSSI)
 {
 	int32 iStatus = SIMLIB_OK_NO_VALUE;
     uint32 i = 0;
 
-	if(Channel == 0)
+	if((Channels == 0) || (ChannelCount == 0))
 	{
 		iStatus = SIMLIB_INVALID_PARAM;
 		goto end_of_function;
 	}
 
+	if(*ChannelCount > 12)
+	{
+		*ChannelCount = 12;
+	}
+
 	OS_MutSemTake(SIMLIB_LibData.MutexID);
 
-	for(i=0; i < 12; ++i)
+	for(i=0; i < *ChannelCount; ++i)
 	{
-		*Channel[i] = SIMLIB_LibData.RCInputData.Channel[i];
+		Channels[i] = SIMLIB_LibData.RCInputData.Channel[i];
 	}
 	*RSSI = SIMLIB_LibData.RCInputData.RSSI;
 
@@ -532,13 +547,20 @@ end_of_function:
 }
 
 int32 SIMLIB_SetRCInputs(
-		const uint16 *Channel[12],
+		const uint16 *Channels,
+		uint16 ChannelCount,
 		uint8  RSSI)
 {
 	int32 iStatus = SIMLIB_OK_NO_VALUE;
     uint32 i = 0;
 
-	if(Channel == 0)
+	if(Channels == 0)
+	{
+		iStatus = SIMLIB_INVALID_PARAM;
+		goto end_of_function;
+	}
+
+	if(ChannelCount > 12)
 	{
 		iStatus = SIMLIB_INVALID_PARAM;
 		goto end_of_function;
@@ -546,9 +568,9 @@ int32 SIMLIB_SetRCInputs(
 
 	OS_MutSemTake(SIMLIB_LibData.MutexID);
 
-	for(i=0; i < 12; ++i)
+	for(i=0; i < ChannelCount; ++i)
 	{
-		SIMLIB_LibData.RCInputData.Channel[i] = *Channel[i];
+		SIMLIB_LibData.RCInputData.Channel[i] = Channels[i];
 	}
 	SIMLIB_LibData.RCInputData.RSSI = RSSI;
 	SIMLIB_LibData.RCInputData.DataState = SIMLIB_OK_FRESH;
@@ -563,23 +585,29 @@ end_of_function:
 
 
 int32 SIMLIB_GetActuatorControls(
-		float  *Control[16],
+		float  *Control,
+		uint32 *ControlCount,
 		uint8  *Mode)
 {
 	int32 iStatus = SIMLIB_OK_NO_VALUE;
 	uint32 i = 0;
 
-	if(Control == 0)
+	if((Control == 0) || (ControlCount == 0))
 	{
 		iStatus = SIMLIB_INVALID_PARAM;
 		goto end_of_function;
 	}
 
+	if(*ControlCount > 16)
+	{
+		*ControlCount = 16;
+	}
+
 	OS_MutSemTake(SIMLIB_LibData.MutexID);
 
-	for(i=0; i < 16; ++i)
+	for(i=0; i < *ControlCount; ++i)
 	{
-		*Control[i] = SIMLIB_LibData.ActuatorControlsData.Control[i];
+		Control[i] = SIMLIB_LibData.ActuatorControlsData.Control[i];
 	}
 	*Mode = SIMLIB_LibData.ActuatorControlsData.Mode;
 
@@ -596,11 +624,21 @@ end_of_function:
 }
 
 int32 SIMLIB_SetActuatorControls(
-		const float *Control[16],
+		const float *Control,
+		uint32 ControlCount,
 		uint8  Mode)
 {
 	int32 iStatus = SIMLIB_OK_NO_VALUE;
 	uint32 i = 0;
+	mavlink_message_t msg;
+	uint8 buffer[MAVLINK_MAX_PACKET_LEN];
+	mavlink_hil_actuator_controls_t actuatorControlsMsg;
+	uint32 length = 0;
+    struct sockaddr_in si_sim;
+
+    si_sim.sin_family = AF_INET;
+    si_sim.sin_port = htons(57770);
+    si_sim.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
 
 	if(Control == 0)
 	{
@@ -608,16 +646,37 @@ int32 SIMLIB_SetActuatorControls(
 		goto end_of_function;
 	}
 
+	if(ControlCount > 16)
+	{
+		iStatus = SIMLIB_INVALID_PARAM;
+		goto end_of_function;
+	}
+
 	OS_MutSemTake(SIMLIB_LibData.MutexID);
 
-	for(i=0; i < 16; ++i)
+	for(i=0; i < ControlCount; ++i)
 	{
-		SIMLIB_LibData.ActuatorControlsData.Control[i] = *Control[i];
+		SIMLIB_LibData.ActuatorControlsData.Control[i] = Control[i];
 	}
 	SIMLIB_LibData.ActuatorControlsData.Mode = Mode;
 	SIMLIB_LibData.ActuatorControlsData.DataState = SIMLIB_OK_FRESH;
 
 	OS_MutSemGive(SIMLIB_LibData.MutexID);
+
+	actuatorControlsMsg.time_usec = 0;
+	actuatorControlsMsg.flags = 0;
+	for(i=0; i < ControlCount; ++i)
+	{
+		actuatorControlsMsg.controls[i] = Control[i];
+	}
+	actuatorControlsMsg.mode = 129;
+
+	mavlink_msg_hil_actuator_controls_encode(1, 1, &msg, &actuatorControlsMsg);
+	length = mavlink_msg_to_send_buffer(buffer, &msg);
+
+    sendto(SIMLIB_LibData.Socket, (char *)buffer, length, 0,
+                            (struct sockaddr *) &si_sim,
+                             sizeof(si_sim));
 
 	iStatus = SIMLIB_OK;
 
