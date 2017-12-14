@@ -100,6 +100,18 @@ typedef struct
 	SIMLIB_DataState_t DataState;
 } SIMLIB_ActuatorControlsData_t;
 
+typedef struct
+{
+	uint16 Minimum;
+	uint16 Maximum;
+	uint16 Current;
+	uint16 Covariance;
+	PX4_DistanceSensorType_t Type;
+	uint8  ID;
+	PX4_SensorOrientation_t  Orientation;
+	SIMLIB_DataState_t DataState;
+} SIMLIB_DistanceSensorData_t;
+
 
 typedef struct
 {
@@ -113,7 +125,10 @@ typedef struct
 	SIMLIB_GPSData_t GPSData;
 	SIMLIB_RCInputData_t RCInputData;
 	SIMLIB_ActuatorControlsData_t ActuatorControlsData;
+	SIMLIB_DistanceSensorData_t  DistanceSensorData;
     int Socket;
+    int SendPort;
+    char SendAddress[255];
 } SIMLIB_LibData_t;
 
 SIMLIB_LibData_t SIMLIB_LibData;
@@ -157,9 +172,15 @@ int32 SIM_LibInit(void)
 }/* End SIM_LibInit */
 
 
-void SIMLIB_SetSocket(int Socket)
+void SIMLIB_SetSocket(int Socket, int Port, char *Address)
 {
+	OS_printf("%s %s %u\n", __FILE__, __FUNCTION__, __LINE__);
 	SIMLIB_LibData.Socket = Socket;
+	OS_printf("%s %s %u\n", __FILE__, __FUNCTION__, __LINE__);
+	SIMLIB_LibData.SendPort = Port;
+	OS_printf("%s %s %u\n", __FILE__, __FUNCTION__, __LINE__);
+	strncpy(SIMLIB_LibData.SendAddress, Address, sizeof(SIMLIB_LibData.SendAddress));
+	OS_printf("%s %s %u\n", __FILE__, __FUNCTION__, __LINE__);
 }
 
 int32 SIMLIB_GetAccel(float *X, float *Y, float *Z)
@@ -634,11 +655,11 @@ int32 SIMLIB_SetActuatorControls(
 	uint8 buffer[MAVLINK_MAX_PACKET_LEN];
 	mavlink_hil_actuator_controls_t actuatorControlsMsg;
 	uint32 length = 0;
-    struct sockaddr_in si_sim;
+    //struct sockaddr_in si_sim;
 
-    si_sim.sin_family = AF_INET;
-    si_sim.sin_port = htons(57770);
-    si_sim.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+    //si_sim.sin_family = AF_INET;
+    //si_sim.sin_port = htons(36985);
+    //si_sim.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
 
 	if(Control == 0)
 	{
@@ -674,14 +695,96 @@ int32 SIMLIB_SetActuatorControls(
 	mavlink_msg_hil_actuator_controls_encode(1, 1, &msg, &actuatorControlsMsg);
 	length = mavlink_msg_to_send_buffer(buffer, &msg);
 
-    sendto(SIMLIB_LibData.Socket, (char *)buffer, length, 0,
-                            (struct sockaddr *) &si_sim,
-                             sizeof(si_sim));
+	if(SIMLIB_LibData.Socket != 0)
+	{
+		struct sockaddr_in simAddr;
+		int len = sizeof(simAddr);
+
+	    bzero((char *) &simAddr, sizeof(simAddr));
+	    simAddr.sin_family      = AF_INET;
+	    simAddr.sin_addr.s_addr = inet_addr(SIMLIB_LibData.SendAddress);
+	    simAddr.sin_port        = htons(SIMLIB_LibData.SendPort);
+
+		sendto(SIMLIB_LibData.Socket, (char *)buffer, length, 0, (const struct sockaddr *)&simAddr, (socklen_t )len);
+	}
 
 	iStatus = SIMLIB_OK;
 
 end_of_function:
     return iStatus;
+}
+
+
+
+int32 SIMLIB_GetDistanceSensor(
+		uint16 *Minimum,
+		uint16 *Maximum,
+		uint16 *Current,
+		PX4_DistanceSensorType_t *Type,
+		uint8  *ID,
+		PX4_SensorOrientation_t  *Orientation,
+		uint8  *Covariance)
+{
+	int32 iStatus = SIMLIB_OK_NO_VALUE;
+
+	if(
+			(Minimum == 0) ||
+			(Maximum == 0) ||
+			(Current == 0) ||
+			(Type == 0) ||
+			(ID == 0) ||
+			(Orientation == 0) ||
+			(Covariance == 0))
+	{
+		iStatus = SIMLIB_INVALID_PARAM;
+		goto end_of_function;
+	}
+
+	OS_MutSemTake(SIMLIB_LibData.MutexID);
+
+	*Minimum = SIMLIB_LibData.DistanceSensorData.Minimum;
+	*Maximum = SIMLIB_LibData.DistanceSensorData.Maximum;
+	*Current = SIMLIB_LibData.DistanceSensorData.Current;
+	*Type = SIMLIB_LibData.DistanceSensorData.Type;
+	*ID = SIMLIB_LibData.DistanceSensorData.ID;
+	*Orientation = SIMLIB_LibData.DistanceSensorData.Orientation;
+	*Covariance = SIMLIB_LibData.DistanceSensorData.Covariance;
+
+	iStatus = SIMLIB_LibData.DistanceSensorData.DataState;
+	if(iStatus == SIMLIB_OK_FRESH)
+	{
+		SIMLIB_LibData.DistanceSensorData.DataState = SIMLIB_OK_STALE;
+	}
+
+	OS_MutSemGive(SIMLIB_LibData.MutexID);
+
+end_of_function:
+    return iStatus;
+}
+
+int32 SIMLIB_SetDistanceSensor(
+		uint16 Minimum,
+		uint16 Maximum,
+		uint16 Current,
+		PX4_DistanceSensorType_t Type,
+		uint8  ID,
+		PX4_SensorOrientation_t  Orientation,
+		uint8  Covariance)
+{
+	OS_MutSemTake(SIMLIB_LibData.MutexID);
+
+	SIMLIB_LibData.DistanceSensorData.Minimum = Minimum;
+	SIMLIB_LibData.DistanceSensorData.Maximum = Maximum;
+	SIMLIB_LibData.DistanceSensorData.Current = Current;
+	SIMLIB_LibData.DistanceSensorData.Type = Type;
+	SIMLIB_LibData.DistanceSensorData.ID = ID;
+	SIMLIB_LibData.DistanceSensorData.Orientation = Orientation;
+	SIMLIB_LibData.DistanceSensorData.Covariance = Covariance;
+	SIMLIB_LibData.DistanceSensorData.DataState = SIMLIB_OK_FRESH;
+
+	OS_MutSemGive(SIMLIB_LibData.MutexID);
+
+	return SIMLIB_OK;
 }
 
 

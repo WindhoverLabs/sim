@@ -84,7 +84,24 @@ int32 SIMLIB_SetActuatorControls(
 		uint32 ControlCount,
 		uint8  Mode);
 
-void SIMLIB_SetSocket(int Socket);
+int32 SIMLIB_GetDistanceSensor(
+		uint16 *Minimum,
+		uint16 *Maximum,
+		uint16 *Current,
+		PX4_DistanceSensorType_t *Type,
+		uint8  *ID,
+		PX4_SensorOrientation_t  *Orientation,
+		uint8  *Covariance);
+int32 SIMLIB_SetDistanceSensor(
+		uint16 Minimum,
+		uint16 Maximum,
+		uint16 Current,
+		PX4_DistanceSensorType_t Type,
+		uint8  ID,
+		PX4_SensorOrientation_t  Orientation,
+		uint8  Covariance);
+
+void SIMLIB_SetSocket(int Socket, int Port, char *Address);
 
 
 #ifdef __cplusplus

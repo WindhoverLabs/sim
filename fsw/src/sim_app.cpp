@@ -524,8 +524,6 @@ int32 SIM::ListenerInit()
 		goto end_of_function;
 	}
 
-	SIMLIB_SetSocket(Socket);
-
 	ChildContinueFlag = true;
 
 	Status = CFE_ES_CreateChildTask(&ListenerTaskID,
@@ -570,19 +568,24 @@ void SIM::ListenerTask_c(void)
 void SIM::ListenerTask(void)
 {
 	char buffer[SIM_MAX_MESSAGE_SIZE] = {};
-	uint32 size = 0;
+	int32 size = SIM_MAX_MESSAGE_SIZE;
 
 	CFE_ES_RegisterChildTask();
 
 	while(ChildContinueExec())
 	{
-		size = recv(Socket,
+		struct sockaddr_in client;
+		socklen_t len = sizeof(client);
+
+		size = recvfrom(Socket,
 						   (char *)buffer,
-						   (size_t)&size, 0);
+						   (size_t)&size, 0,
+						   (struct sockaddr*)&client,
+						   &len);
 		if(size <= 0)
 		{
 	    	//TODO:  Add event
-	    	//OS_printf("OSAL:  Failed to receive message from sim\n");
+	    	OS_printf("OSAL:  Failed to receive message from sim.  errno = %u\n", errno);
 			OS_TaskDelay(1000);
 		}
 		else
@@ -591,6 +594,16 @@ void SIM::ListenerTask(void)
 			mavlink_status_t status;
 			int32 i = 0;
 			char temp;
+			int port = ntohs(client.sin_port);
+			char *addr = inet_ntoa(client.sin_addr);
+
+			if(port != SendPort)
+			{
+				/* This is a new connection.  Inform the simlib code. */
+				strncpy(SendAddress, addr, sizeof(SendAddress));
+				SendPort = port;
+				SIMLIB_SetSocket(Socket, SendPort, SendAddress);
+			}
 
 			for (i = 0; i < size; ++i)
 			{
@@ -672,6 +685,30 @@ void SIM::ListenerTask(void)
 							break;
 						}
 
+						case MAVLINK_MSG_ID_DISTANCE_SENSOR:
+						{
+							PX4_DistanceSensorType_t sensorType;
+							PX4_SensorOrientation_t  sensorOrientation;
+							mavlink_distance_sensor_t 	decodedMsg;
+							mavlink_msg_distance_sensor_decode(&msg, &decodedMsg);
+
+							OS_printf("MAVLINK_MSG_ID_DISTANCE_SENSOR\n");
+
+							sensorType = (PX4_DistanceSensorType_t) decodedMsg.type;
+							sensorOrientation = (PX4_SensorOrientation_t) decodedMsg.orientation;
+
+							SIMLIB_SetDistanceSensor(
+									decodedMsg.min_distance,
+									decodedMsg.max_distance,
+									decodedMsg.current_distance,
+									sensorType,
+									decodedMsg.id,
+									sensorOrientation,
+									decodedMsg.covariance);
+
+							break;
+						}
+
 						default:
 							printf("\nReceived packet: SYS: %d, COMP: %d, LEN: %d, MSG ID: %d\n", msg.sysid, msg.compid, msg.len, msg.msgid);
 							break;
@@ -683,6 +720,8 @@ void SIM::ListenerTask(void)
 
 	CFE_ES_ExitChildTask();
 }
+
+
 
 
 /************************/

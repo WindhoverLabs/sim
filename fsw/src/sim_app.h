@@ -94,7 +94,9 @@ public:
     /** \brief Housekeeping Telemetry for downlink */
     SIM_HkTlm_t HkTlm;
 
-    int Socket;
+    int    Socket;
+    int    SendPort;
+    char   SendAddress[255];
 
     /************************************************************************/
     /** \brief Simulator Interface (SIM) application entry point
