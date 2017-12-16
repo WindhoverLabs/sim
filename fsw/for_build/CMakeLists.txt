@@ -43,7 +43,7 @@ add_airliner_app_def(sim
    
     INCLUDES
         ${CMAKE_CURRENT_SOURCE_DIR}/../src/
-        ${PROJECT_SOURCE_DIR}/tools/mavlink/common/
+        ${PROJECT_SOURCE_DIR}/mavlink/include/mavlink/v1.0/common/
 
     USER_DOCS   ${CMAKE_CURRENT_SOURCE_DIR}/user_doxy.in
     DESIGN_DOCS ${CMAKE_CURRENT_SOURCE_DIR}/detail_doxy.in
@@ -58,11 +58,11 @@ add_airliner_app_def(simlib
    
     INCLUDES
         ${CMAKE_CURRENT_SOURCE_DIR}/../src/
-        ${PROJECT_SOURCE_DIR}/tools/mavlink/common/
+        ${PROJECT_SOURCE_DIR}/mavlink/include/mavlink/v1.0/common/
 
     # This application has a public include header.  Add it so all the other applications can access it.
-    PUBLIC_INCLUDES
-        ${CMAKE_CURRENT_SOURCE_DIR}/../public_inc/
+    #PUBLIC_INCLUDES
+    #    ${CMAKE_CURRENT_SOURCE_DIR}/../public_inc/
 
     USER_DOCS   ${CMAKE_CURRENT_SOURCE_DIR}/lib_user_doxy.in
     DESIGN_DOCS ${CMAKE_CURRENT_SOURCE_DIR}/lib_detail_doxy.in
@@ -93,7 +93,7 @@ add_airliner_app_unit_test(sim-ut
     INCLUDES
         ${CMAKE_CURRENT_SOURCE_DIR}/../src/
         ${CMAKE_CURRENT_SOURCE_DIR}/../unit_test/
-        ${PROJECT_SOURCE_DIR}/tools/mavlink/common/
+        ${PROJECT_SOURCE_DIR}/mavlink/include/mavlink/v1.0/common/
         
     VALGRIND_SUPPRESSION_FILE
         ${CMAKE_CURRENT_SOURCE_DIR}/../unit_test/valgrind.supp
