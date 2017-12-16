@@ -692,8 +692,6 @@ void SIM::ListenerTask(void)
 							mavlink_distance_sensor_t 	decodedMsg;
 							mavlink_msg_distance_sensor_decode(&msg, &decodedMsg);
 
-							OS_printf("MAVLINK_MSG_ID_DISTANCE_SENSOR\n");
-
 							sensorType = (PX4_DistanceSensorType_t) decodedMsg.type;
 							sensorOrientation = (PX4_SensorOrientation_t) decodedMsg.orientation;
 
