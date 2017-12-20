@@ -174,13 +174,9 @@ int32 SIM_LibInit(void)
 
 void SIMLIB_SetSocket(int Socket, int Port, char *Address)
 {
-	OS_printf("%s %s %u\n", __FILE__, __FUNCTION__, __LINE__);
 	SIMLIB_LibData.Socket = Socket;
-	OS_printf("%s %s %u\n", __FILE__, __FUNCTION__, __LINE__);
 	SIMLIB_LibData.SendPort = Port;
-	OS_printf("%s %s %u\n", __FILE__, __FUNCTION__, __LINE__);
 	strncpy(SIMLIB_LibData.SendAddress, Address, sizeof(SIMLIB_LibData.SendAddress));
-	OS_printf("%s %s %u\n", __FILE__, __FUNCTION__, __LINE__);
 }
 
 int32 SIMLIB_GetAccel(float *X, float *Y, float *Z)
