@@ -494,6 +494,7 @@ int32 SIM::ListenerInit()
 	int32 TaskID = 0;
     int   reuseaddr = 1;
 	struct sockaddr_in address;
+	char addr[] = "127.0.0.1";
 
     if((Socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0)
     {
@@ -525,6 +526,8 @@ int32 SIM::ListenerInit()
 	}
 
 	ChildContinueFlag = true;
+
+	SIMLIB_SetSocket(Socket, 58691, addr);
 
 	Status = CFE_ES_CreateChildTask(&ListenerTaskID,
 				SIM_LISTENER_TASK_NAME,
