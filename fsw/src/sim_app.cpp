@@ -661,6 +661,19 @@ void SIM::ListenerTask(void)
 						{
 							mavlink_hil_gps_t 					decodedMsg;
 							mavlink_msg_hil_gps_decode(&msg, &decodedMsg);
+							SIMLIB_SetGPS(
+								(PX4_GpsFixType_t)decodedMsg.fix_type,
+								decodedMsg.lat,
+								decodedMsg.lon,
+								decodedMsg.alt,
+								decodedMsg.eph,
+								decodedMsg.epv,
+								decodedMsg.vel,
+								decodedMsg.vn,
+								decodedMsg.ve,
+								decodedMsg.vd,
+								decodedMsg.cog,
+								decodedMsg.satellites_visible);
 							break;
 						}
 
