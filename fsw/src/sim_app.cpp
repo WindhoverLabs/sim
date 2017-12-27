@@ -568,6 +568,9 @@ void SIM::ListenerTask_c(void)
 	oSIM.ListenerTask();
 }
 
+char SIM_Buffer[SIM_MAX_MESSAGE_SIZE];
+
+
 void SIM::ListenerTask(void)
 {
 	char buffer[SIM_MAX_MESSAGE_SIZE] = {};
