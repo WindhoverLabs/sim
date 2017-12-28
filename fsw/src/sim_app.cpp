@@ -37,7 +37,7 @@ SIM oSIM;
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 SIM::SIM() :
 	_accel_int(1000000 / GYROSIM_ACCEL_DEFAULT_RATE, true),
-	_gyro_int(1000000 / GYROSIM_GYRO_DEFAULT_RATE, true),
+	_gyro_int(1000000 / GYROSIM_GYRO_DEFAULT_RATE, true)
 {
 
 }
@@ -791,11 +791,10 @@ void SIM::ListenerTask(void)
 
 #ifdef SIM_PUBLISH_MPU9250
                                 SensorAccel.Temperature = decodedMsg.temperature;
-                                SensorAccel.TemperatureRaw = (int16)((SensorAccel.Temperature - 35.0f) * 361.0f)
+                                SensorAccel.TemperatureRaw = (int16)((SensorAccel.Temperature - 35.0f) * 361.0f);
                                 SensorMag.Temperature = decodedMsg.temperature;
-                                SensorMag.TemperatureRaw = (int16)((SensorMag.Temperature - 35.0f) * 361.0f)
                                 SensorGyro.Temperature = decodedMsg.temperature;
-                                SensorGyro.TemperatureRaw = (int16)((SensorGyro.Temperature - 35.0f) * 361.0f)
+                                SensorGyro.TemperatureRaw = (int16)((SensorGyro.Temperature - 35.0f) * 361.0f);
 #endif
 
 #if  !defined(SIM_PUBLISH_MS5611) || !defined(SIM_PUBLISH_MPU9250)
