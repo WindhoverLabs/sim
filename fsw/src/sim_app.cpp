@@ -16,6 +16,7 @@
 #include "mavlink.h"
 #include "simlib.h"
 
+#include "lib/px4lib.h"
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /*                                                                 */
@@ -148,6 +149,44 @@ void SIM::InitData()
     /* Init housekeeping message. */
     CFE_SB_InitMsg(&HkTlm,
     		SIM_HK_TLM_MID, sizeof(HkTlm), TRUE);
+
+#ifdef SIM_PUBLISH_GPS
+    /* Init output message GPS position */
+    CFE_SB_InitMsg(&VehicleGps,
+            PX4_VEHICLE_GPS_POSITION_MID, sizeof(PX4_VehicleGpsPositionMsg_t), TRUE);
+#endif
+
+#ifdef SIM_PUBLISH_MPU9250
+    /* Init output message accelerometer */
+    CFE_SB_InitMsg(&SensorAccel,
+            PX4_SENSOR_ACCEL_MID, sizeof(PX4_SensorAccelMsg_t), TRUE);
+    /* Init output message magnetometer */
+    CFE_SB_InitMsg(&SensorMag,
+            PX4_SENSOR_MAG_MID, sizeof(PX4_SensorMagMsg_t), TRUE);
+    /* Init output message gyroscope */
+    CFE_SB_InitMsg(&SensorGyro,
+            PX4_SENSOR_GYRO_MID, sizeof(PX4_SensorGyroMsg_t), TRUE);
+#endif
+
+#ifdef SIM_PUBLISH_MS5611
+    /* Init output message baro */
+    CFE_SB_InitMsg(&SensorBaro,
+            PX4_SENSOR_BARO_MID, sizeof(PX4_SensorBaroMsg_t), TRUE);
+#endif
+
+#ifdef SIM_PUBLISH_RCIN
+    /* Init output message RC input */
+    CFE_SB_InitMsg(&InputRcMsg, PX4_INPUT_RC_MID, 
+        sizeof(PX4_InputRcMsg_t), TRUE);
+#endif
+
+#ifdef SIM_PUBLISH_ULR
+    /* Init output messages */
+    CFE_SB_InitMsg(&DistanceSensor,
+        PX4_DISTANCE_SENSOR_MID, sizeof(PX4_DistanceSensorMsg_t), TRUE);
+#endif
+
+
 }
 
 
@@ -661,6 +700,23 @@ void SIM::ListenerTask(void)
 						{
 							mavlink_hil_gps_t 					decodedMsg;
 							mavlink_msg_hil_gps_decode(&msg, &decodedMsg);
+#ifdef SIM_PUBLISH_GPS
+                            VehicleGps.Timestamp      = PX4LIB_GetPX4TimeUs();
+                            VehicleGps.Lat            = decodedMsg.lat;
+                            VehicleGps.Lon            = decodedMsg.lon;
+                            VehicleGps.Alt            = decodedMsg.alt;
+                            VehicleGps.EpH            = (float)decodedMsg.eph * 1e-2f;
+                            VehicleGps.EpV            = (float)decodedMsg.epv * 1e-2f;
+                            VehicleGps.Vel_m_s        = (float)decodedMsg.vel / 100.0f;
+                            VehicleGps.Vel_n_m_s      = (float)decodedMsg.vn / 100.0f;
+                            VehicleGps.Vel_e_m_s      = (float)decodedMsg.ve / 100.0f;
+                            VehicleGps.Vel_d_m_s      = (float)decodedMsg.vd / 100.0f;
+                            VehicleGps.COG            = (float)decodedMsg.cog * 3.1415f / (100.0f * 180.0f);
+                            VehicleGps.FixType        = decodedMsg.fix_type;
+                            VehicleGps.SatellitesUsed = decodedMsg.satellites_visible;
+                            CFE_SB_TimeStampMsg((CFE_SB_Msg_t*)&VehicleGps);
+                            CFE_SB_SendMsg((CFE_SB_Msg_t*)&VehicleGps);
+#else
 							SIMLIB_SetGPS(
 								(PX4_GpsFixType_t)decodedMsg.fix_type,
 								decodedMsg.lat,
@@ -674,6 +730,7 @@ void SIM::ListenerTask(void)
 								decodedMsg.vd,
 								decodedMsg.cog,
 								decodedMsg.satellites_visible);
+#endif
 							break;
 						}
 

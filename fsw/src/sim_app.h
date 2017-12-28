@@ -57,6 +57,11 @@ extern "C" {
 /************************************************************************
  ** Local Defines
  *************************************************************************/
+//#define SIM_PUBLISH_GPS
+//#define SIM_PUBLISH_MPU9250
+//#define SIM_PUBLISH_MS5611
+//#define SIM_PUBLISH_RCIN
+//#define SIM_PUBLISH_ULR
 
 /************************************************************************
  ** Local Structure Definitions
@@ -93,6 +98,16 @@ public:
 
     /** \brief Housekeeping Telemetry for downlink */
     SIM_HkTlm_t HkTlm;
+
+    /* All messages */
+    PX4_VehicleGpsPositionMsg_t     VehicleGps;
+    PX4_SensorAccelMsg_t            SensorAccel;
+    PX4_SensorMagMsg_t              SensorMag;
+    PX4_SensorGyroMsg_t             SensorGyro;
+    PX4_SensorBaroMsg_t             SensorBaro;
+    PX4_InputRcMsg_t                InputRcMsg;
+    PX4_DistanceSensorMsg_t         DistanceSensor;
+    PX4_ActuatorControlsMsg_t       m_ActuatorControls0;
 
     int    Socket;
     int    SendPort;
