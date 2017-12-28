@@ -54,6 +54,8 @@ extern "C" {
 #include "sim_msg.h"
 #include "sim_events.h"
 #include "sim_tbldefs.h"
+#include "integrator.h"
+
 
 #include "px4_msgs.h"
 /************************************************************************
@@ -63,6 +65,14 @@ extern "C" {
 #define SIM_PUBLISH_MPU9250
 #define SIM_PUBLISH_MS5611
 #define SIM_PUBLISH_ULR
+
+#define GYROSIM_ACCEL_DEFAULT_RATE	400
+
+#define GYROSIM_GYRO_DEFAULT_RATE	400
+#define CONSTANTS_ONE_G      9.80665f
+#define MG2MS2              (CONSTANTS_ONE_G / 1000.0f)
+#define NEW_SCALE_G_DIGIT   0.732e-3f
+#define NEW_SCALE_GA_DIGIT  0.479e-3f
 
 /************************************************************************
  ** Local Structure Definitions
@@ -99,6 +109,9 @@ public:
 
     /** \brief Housekeeping Telemetry for downlink */
     SIM_HkTlm_t HkTlm;
+
+	Integrator _accel_int;
+	Integrator _gyro_int;
 
     /* All messages */
     PX4_VehicleGpsPositionMsg_t     VehicleGps;

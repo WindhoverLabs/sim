@@ -15,6 +15,9 @@
 #include <unistd.h>
 #include "mavlink.h"
 #include "simlib.h"
+#include "Vector3F.hpp"
+#include "integrator.h"
+
 
 #include "lib/px4lib.h"
 
@@ -32,7 +35,9 @@ SIM oSIM;
 /* Default constructor.                                            */
 /*                                                                 */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-SIM::SIM()
+SIM::SIM() :
+	_accel_int(1000000 / GYROSIM_ACCEL_DEFAULT_RATE, true),
+	_gyro_int(1000000 / GYROSIM_GYRO_DEFAULT_RATE, true),
 {
 
 }
@@ -600,6 +605,12 @@ void SIM::ListenerTask_c(void)
 
 void SIM::ListenerTask(void)
 {
+#ifdef SIM_PUBLISH_MPU9250
+    math::Vector3F gval;
+    math::Vector3F gval_integrated;
+    math::Vector3F aval;
+    math::Vector3F aval_integrated;
+#endif
 	char buffer[SIM_MAX_MESSAGE_SIZE] = {};
 	int32 size = SIM_MAX_MESSAGE_SIZE;
 
@@ -660,13 +671,32 @@ void SIM::ListenerTask(void)
 							if(decodedMsg.fields_updated & 0x00000007)
 							{
 #ifdef SIM_PUBLISH_MPU9250
+                                //SensorAccel.Scaling = NEW_SCALE_G_DIGIT * CONSTANTS_ONE_G;
+                                SensorAccel.Scaling = 0;
+                                SensorAccel.Range_m_s2 = 0;
                                 SensorAccel.Timestamp = PX4LIB_GetPX4TimeUs();
-                                SensorAccel.XRaw = decodedMsg.xacc * 1000.0f;
-                                SensorAccel.YRaw = decodedMsg.yacc * 1000.0f;
-                                SensorAccel.ZRaw = decodedMsg.zacc * 1000.0f;
+                                //SensorAccel.XRaw = (int16)((decodedMsg.xacc / MG2MS2) / SensorAccel.Scaling);
+                                //SensorAccel.YRaw = (int16)((decodedMsg.yacc / MG2MS2) / SensorAccel.Scaling);
+                                //SensorAccel.ZRaw = (int16)((decodedMsg.zacc / MG2MS2) / SensorAccel.Scaling);
+                                SensorAccel.XRaw = 0;
+                                SensorAccel.YRaw = 0;
+                                SensorAccel.ZRaw = 0;
                                 SensorAccel.X = decodedMsg.xacc;
                                 SensorAccel.Y = decodedMsg.yacc;
                                 SensorAccel.Z = decodedMsg.zacc;
+                                /* Accel Integrate */
+                                aval[0] = SensorAccel.X;
+                                aval[1] = SensorAccel.Y;
+                                aval[2] = SensorAccel.Z;
+                                aval_integrated[0] = 0.0f;
+                                aval_integrated[1] = 0.0f;
+                                aval_integrated[2] = 0.0f;
+                                _accel_int.put(SensorAccel.Timestamp, aval, aval_integrated, SensorAccel.IntegralDt);
+                                SensorAccel.XIntegral = aval_integrated[0];
+                                SensorAccel.YIntegral = aval_integrated[1];
+                                SensorAccel.ZIntegral = aval_integrated[2];
+                                /* fake device id */
+                                SensorAccel.DeviceID = 6789478;
                                 CFE_SB_TimeStampMsg((CFE_SB_Msg_t*)&SensorAccel);
                                 CFE_SB_SendMsg((CFE_SB_Msg_t*)&SensorAccel);
 #else
@@ -677,13 +707,30 @@ void SIM::ListenerTask(void)
 							if(decodedMsg.fields_updated & 0x00000038)
 							{
 #ifdef SIM_PUBLISH_MPU9250
+                                SensorGyro.Scaling = 0;
+                                SensorGyro.Range = 0;
                                 SensorGyro.Timestamp = PX4LIB_GetPX4TimeUs();
-                                SensorGyro.XRaw = decodedMsg.xgyro * 1000.0f;
-                                SensorGyro.YRaw = decodedMsg.ygyro * 1000.0f;
-                                SensorGyro.ZRaw = decodedMsg.zgyro * 1000.0f;
+                                //SensorGyro.XRaw = (int16)(decodedMsg.xgyro * 1000.0f);
+                                //SensorGyro.YRaw = (int16)(decodedMsg.ygyro * 1000.0f);
+                                //SensorGyro.ZRaw = (int16)(decodedMsg.zgyro * 1000.0f);
+                                SensorGyro.XRaw = 0;
+                                SensorGyro.YRaw = 0;
+                                SensorGyro.ZRaw = 0;
                                 SensorGyro.X = decodedMsg.xgyro;
                                 SensorGyro.Y = decodedMsg.ygyro;
                                 SensorGyro.Z = decodedMsg.zgyro;
+                                gval[0] = SensorGyro.X;
+                                gval[1] = SensorGyro.Y;
+                                gval[2] = SensorGyro.Z;
+                                gval_integrated[0] = 0.0f;
+                                gval_integrated[1] = 0.0f;
+                                gval_integrated[2] = 0.0f;
+                                _gyro_int.put(SensorGyro.Timestamp, gval, gval_integrated, SensorGyro.IntegralDt);
+                                SensorGyro.XIntegral = gval_integrated[0];
+                                SensorGyro.YIntegral = gval_integrated[1];
+                                SensorGyro.ZIntegral = gval_integrated[2];
+                                /* fake device ID */
+                                SensorGyro.DeviceID = 3467548;
                                 CFE_SB_TimeStampMsg((CFE_SB_Msg_t*)&SensorGyro);
                                 CFE_SB_SendMsg((CFE_SB_Msg_t*)&SensorGyro);
 #else
@@ -695,9 +742,14 @@ void SIM::ListenerTask(void)
 							{
 #ifdef SIM_PUBLISH_MPU9250
                                 SensorMag.Timestamp = PX4LIB_GetPX4TimeUs();
-                                SensorMag.XRaw = decodedMsg.xmag * 1000.0f;
-                                SensorMag.YRaw = decodedMsg.ymag * 1000.0f;
-                                SensorMag.ZRaw = decodedMsg.zmag * 1000.0f;
+                                SensorMag.Scaling = 0;
+                                SensorMag.Range = 0;
+                                //SensorMag.XRaw = (int16)((decodedMsg.xmag * 1000.0f) / NEW_SCALE_GA_DIGIT);
+                                //SensorMag.YRaw = (int16)((decodedMsg.ymag * 1000.0f) / NEW_SCALE_GA_DIGIT);
+                                //SensorMag.ZRaw = (int16)((decodedMsg.zmag * 1000.0f) / NEW_SCALE_GA_DIGIT);
+                                SensorMag.XRaw = (int16)((decodedMsg.xmag * 1000.0f));
+                                SensorMag.YRaw = (int16)((decodedMsg.ymag * 1000.0f));
+                                SensorMag.ZRaw = (int16)((decodedMsg.zmag * 1000.0f));
                                 SensorMag.X = decodedMsg.xmag;
                                 SensorMag.Y = decodedMsg.ymag;
                                 SensorMag.Z = decodedMsg.zmag;
@@ -739,8 +791,11 @@ void SIM::ListenerTask(void)
 
 #ifdef SIM_PUBLISH_MPU9250
                                 SensorAccel.Temperature = decodedMsg.temperature;
+                                SensorAccel.TemperatureRaw = (int16)((SensorAccel.Temperature - 35.0f) * 361.0f)
                                 SensorMag.Temperature = decodedMsg.temperature;
+                                SensorMag.TemperatureRaw = (int16)((SensorMag.Temperature - 35.0f) * 361.0f)
                                 SensorGyro.Temperature = decodedMsg.temperature;
+                                SensorGyro.TemperatureRaw = (int16)((SensorGyro.Temperature - 35.0f) * 361.0f)
 #endif
 
 #if  !defined(SIM_PUBLISH_MS5611) || !defined(SIM_PUBLISH_MPU9250)
