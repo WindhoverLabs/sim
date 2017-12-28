@@ -174,12 +174,6 @@ void SIM::InitData()
             PX4_SENSOR_BARO_MID, sizeof(PX4_SensorBaroMsg_t), TRUE);
 #endif
 
-#ifdef SIM_PUBLISH_RCIN
-    /* Init output message RC input */
-    CFE_SB_InitMsg(&InputRcMsg, PX4_INPUT_RC_MID, 
-        sizeof(PX4_InputRcMsg_t), TRUE);
-#endif
-
 #ifdef SIM_PUBLISH_ULR
     /* Init output messages */
     CFE_SB_InitMsg(&DistanceSensor,
@@ -683,15 +677,15 @@ void SIM::ListenerTask(void)
 							if(decodedMsg.fields_updated & 0x00000038)
 							{
 #ifdef SIM_PUBLISH_MPU9250
-                            SensorGyro.Timestamp = PX4LIB_GetPX4TimeUs();
-                            SensorGyro.XRaw = decodedMsg.xgyro * 1000.0f;
-                            SensorGyro.YRaw = decodedMsg.ygyro * 1000.0f;
-                            SensorGyro.ZRaw = decodedMsg.zgyro * 1000.0f;
-                            SensorGyro.X = decodedMsg.xgyro;
-                            SensorGyro.Y = decodedMsg.ygyro;
-                            SensorGyro.Z = decodedMsg.zgyro;
-                            CFE_SB_TimeStampMsg((CFE_SB_Msg_t*)&SensorGyro);
-                            CFE_SB_SendMsg((CFE_SB_Msg_t*)&SensorGyro);
+                                SensorGyro.Timestamp = PX4LIB_GetPX4TimeUs();
+                                SensorGyro.XRaw = decodedMsg.xgyro * 1000.0f;
+                                SensorGyro.YRaw = decodedMsg.ygyro * 1000.0f;
+                                SensorGyro.ZRaw = decodedMsg.zgyro * 1000.0f;
+                                SensorGyro.X = decodedMsg.xgyro;
+                                SensorGyro.Y = decodedMsg.ygyro;
+                                SensorGyro.Z = decodedMsg.zgyro;
+                                CFE_SB_TimeStampMsg((CFE_SB_Msg_t*)&SensorGyro);
+                                CFE_SB_SendMsg((CFE_SB_Msg_t*)&SensorGyro);
 #else
 								SIMLIB_SetGyro(decodedMsg.xgyro, decodedMsg.ygyro, decodedMsg.zgyro);
 #endif
@@ -700,15 +694,15 @@ void SIM::ListenerTask(void)
 							if(decodedMsg.fields_updated & 0x000001a0)
 							{
 #ifdef SIM_PUBLISH_MPU9250
-                            SensorMag.Timestamp = PX4LIB_GetPX4TimeUs();
-                            SensorMag.XRaw = decodedMsg.xmag * 1000.0f;
-                            SensorMag.YRaw = decodedMsg.ymag * 1000.0f;
-                            SensorMag.ZRaw = decodedMsg.zmag * 1000.0f;
-                            SensorMag.X = decodedMsg.xmag;
-                            SensorMag.Y = decodedMsg.ymag;
-                            SensorMag.Z = decodedMsg.zmag;
-                            CFE_SB_TimeStampMsg((CFE_SB_Msg_t*)&SensorMag);
-                            CFE_SB_SendMsg((CFE_SB_Msg_t*)&SensorMag);
+                                SensorMag.Timestamp = PX4LIB_GetPX4TimeUs();
+                                SensorMag.XRaw = decodedMsg.xmag * 1000.0f;
+                                SensorMag.YRaw = decodedMsg.ymag * 1000.0f;
+                                SensorMag.ZRaw = decodedMsg.zmag * 1000.0f;
+                                SensorMag.X = decodedMsg.xmag;
+                                SensorMag.Y = decodedMsg.ymag;
+                                SensorMag.Z = decodedMsg.zmag;
+                                CFE_SB_TimeStampMsg((CFE_SB_Msg_t*)&SensorMag);
+                                CFE_SB_SendMsg((CFE_SB_Msg_t*)&SensorMag);
 #else
 								SIMLIB_SetMag(decodedMsg.xmag, decodedMsg.ymag, decodedMsg.zmag);
 
@@ -739,12 +733,17 @@ void SIM::ListenerTask(void)
 
 							if(decodedMsg.fields_updated & 0x00001000)
 							{
-#if defined(SIM_PUBLISH_MS5611) && defined(SIM_PUBLISH_MPU9250)
-                            SensorAccel.Temperature = decodedMsg.temperature;
-                            SensorMag.Temperature = decodedMsg.temperature;
-                            SensorGyro.Temperature = decodedMsg.temperature;
-                            SensorBaro.Temperature = decodedMsg.temperature;
-#else
+#ifdef SIM_PUBLISH_MS5611
+                                SensorBaro.Temperature = decodedMsg.temperature;
+#endif
+
+#ifdef SIM_PUBLISH_MPU9250
+                                SensorAccel.Temperature = decodedMsg.temperature;
+                                SensorMag.Temperature = decodedMsg.temperature;
+                                SensorGyro.Temperature = decodedMsg.temperature;
+#endif
+
+#if  !defined(SIM_PUBLISH_MS5611) || !defined(SIM_PUBLISH_MPU9250)
 								SIMLIB_SetTemp(decodedMsg.temperature);
 #endif
 							}

@@ -89,6 +89,7 @@ add_airliner_app_unit_test(sim-ut
         ${CMAKE_CURRENT_SOURCE_DIR}/../src/sim_version.h
         ${CMAKE_CURRENT_SOURCE_DIR}/../public_inc/simlib.h
         ${CMAKE_CURRENT_SOURCE_DIR}/../src/simlib_main.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/../unit_test/sim_custom_stubs.c
         
     INCLUDES
         ${CMAKE_CURRENT_SOURCE_DIR}/../src/
