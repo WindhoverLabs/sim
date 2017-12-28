@@ -54,6 +54,8 @@ extern "C" {
 #include "sim_msg.h"
 #include "sim_events.h"
 #include "sim_tbldefs.h"
+
+#include "px4_msgs.h"
 /************************************************************************
  ** Local Defines
  *************************************************************************/

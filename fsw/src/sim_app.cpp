@@ -665,33 +665,91 @@ void SIM::ListenerTask(void)
 
 							if(decodedMsg.fields_updated & 0x00000007)
 							{
+#ifdef SIM_PUBLISH_MPU9250
+                                SensorAccel.Timestamp = PX4LIB_GetPX4TimeUs();
+                                SensorAccel.XRaw = decodedMsg.xacc * 1000.0f;
+                                SensorAccel.YRaw = decodedMsg.yacc * 1000.0f;
+                                SensorAccel.ZRaw = decodedMsg.zacc * 1000.0f;
+                                SensorAccel.X = decodedMsg.xacc;
+                                SensorAccel.Y = decodedMsg.yacc;
+                                SensorAccel.Z = decodedMsg.zacc;
+                                CFE_SB_TimeStampMsg((CFE_SB_Msg_t*)&SensorAccel);
+                                CFE_SB_SendMsg((CFE_SB_Msg_t*)&SensorAccel);
+#else
 								SIMLIB_SetAccel(decodedMsg.xacc, decodedMsg.yacc, decodedMsg.zacc);
+#endif
 							}
 
 							if(decodedMsg.fields_updated & 0x00000038)
 							{
+#ifdef SIM_PUBLISH_MPU9250
+                            SensorGyro.Timestamp = PX4LIB_GetPX4TimeUs();
+                            SensorGyro.XRaw = decodedMsg.xgyro * 1000.0f;
+                            SensorGyro.YRaw = decodedMsg.ygyro * 1000.0f;
+                            SensorGyro.ZRaw = decodedMsg.zgyro * 1000.0f;
+                            SensorGyro.X = decodedMsg.xgyro;
+                            SensorGyro.Y = decodedMsg.ygyro;
+                            SensorGyro.Z = decodedMsg.zgyro;
+                            CFE_SB_TimeStampMsg((CFE_SB_Msg_t*)&SensorGyro);
+                            CFE_SB_SendMsg((CFE_SB_Msg_t*)&SensorGyro);
+#else
 								SIMLIB_SetGyro(decodedMsg.xgyro, decodedMsg.ygyro, decodedMsg.zgyro);
+#endif
 							}
 
 							if(decodedMsg.fields_updated & 0x000001a0)
 							{
+#ifdef SIM_PUBLISH_MPU9250
+                            SensorMag.Timestamp = PX4LIB_GetPX4TimeUs();
+                            SensorMag.XRaw = decodedMsg.xmag * 1000.0f;
+                            SensorMag.YRaw = decodedMsg.ymag * 1000.0f;
+                            SensorMag.ZRaw = decodedMsg.zmag * 1000.0f;
+                            SensorMag.X = decodedMsg.xmag;
+                            SensorMag.Y = decodedMsg.ymag;
+                            SensorMag.Z = decodedMsg.zmag;
+                            CFE_SB_TimeStampMsg((CFE_SB_Msg_t*)&SensorMag);
+                            CFE_SB_SendMsg((CFE_SB_Msg_t*)&SensorMag);
+#else
 								SIMLIB_SetMag(decodedMsg.xmag, decodedMsg.ymag, decodedMsg.zmag);
+
+#endif
 							}
 
 							if(decodedMsg.fields_updated & 0x00000600)
 							{
+#ifdef SIM_PUBLISH_MS5611
+                                SensorBaro.Timestamp = PX4LIB_GetPX4TimeUs();
+                                SensorBaro.Pressure = decodedMsg.abs_pressure;
+#else
 								SIMLIB_SetPressure(decodedMsg.abs_pressure, decodedMsg.diff_pressure);
+#endif
 							}
 
 							if(decodedMsg.fields_updated & 0x00000800)
 							{
+#ifdef SIM_PUBLISH_MS5611       
+                                SensorBaro.Timestamp = PX4LIB_GetPX4TimeUs();
+                                SensorBaro.Altitude = decodedMsg.pressure_alt;
+                                CFE_SB_TimeStampMsg((CFE_SB_Msg_t*)&SensorBaro);
+                                CFE_SB_SendMsg((CFE_SB_Msg_t*)&SensorBaro);
+#else
 								SIMLIB_SetPressureAltitude(decodedMsg.pressure_alt);
+#endif
 							}
 
 							if(decodedMsg.fields_updated & 0x00001000)
 							{
+#if defined(SIM_PUBLISH_MS5611) && defined(SIM_PUBLISH_MPU9250)
+                            SensorAccel.Temperature = decodedMsg.temperature;
+                            SensorMag.Temperature = decodedMsg.temperature;
+                            SensorGyro.Temperature = decodedMsg.temperature;
+                            SensorBaro.Temperature = decodedMsg.temperature;
+#else
 								SIMLIB_SetTemp(decodedMsg.temperature);
+#endif
 							}
+                            
+                            
 
 							break;
 						}
@@ -764,7 +822,18 @@ void SIM::ListenerTask(void)
 
 							sensorType = (PX4_DistanceSensorType_t) decodedMsg.type;
 							sensorOrientation = (PX4_SensorOrientation_t) decodedMsg.orientation;
-
+#ifdef SIM_PUBLISH_ULR
+                            DistanceSensor.Timestamp = PX4LIB_GetPX4TimeUs();
+                            DistanceSensor.MinDistance = decodedMsg.min_distance / 100.0f;
+                            DistanceSensor.MaxDistance = decodedMsg.max_distance / 100.0f;
+                            DistanceSensor.CurrentDistance = decodedMsg.current_distance / 100.0f;
+                            DistanceSensor.Type = sensorType;
+                            DistanceSensor.ID = decodedMsg.id;
+                            DistanceSensor.Orientation = sensorOrientation;
+                            DistanceSensor.Covariance = decodedMsg.covariance / 100.0f;
+                            CFE_SB_TimeStampMsg((CFE_SB_Msg_t*)&DistanceSensor);
+                            CFE_SB_SendMsg((CFE_SB_Msg_t*)&DistanceSensor);
+#else
 							SIMLIB_SetDistanceSensor(
 									decodedMsg.min_distance,
 									decodedMsg.max_distance,
@@ -773,7 +842,7 @@ void SIM::ListenerTask(void)
 									decodedMsg.id,
 									sensorOrientation,
 									decodedMsg.covariance);
-
+#endif
 							break;
 						}
 
