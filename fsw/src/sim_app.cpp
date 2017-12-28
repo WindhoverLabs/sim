@@ -777,7 +777,7 @@ void SIM::ListenerTask(void)
                                 SensorBaro.Timestamp = PX4LIB_GetPX4TimeUs();
                                 SensorBaro.Altitude = decodedMsg.pressure_alt;
                                 /* fake device ID */
-                                SensorBaro.DeviceID = 478459;
+                                //SensorBaro.DeviceID = 478459;
                                 CFE_SB_TimeStampMsg((CFE_SB_Msg_t*)&SensorBaro);
                                 CFE_SB_SendMsg((CFE_SB_Msg_t*)&SensorBaro);
 #else
