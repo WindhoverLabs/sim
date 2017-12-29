@@ -61,18 +61,19 @@ extern "C" {
 /************************************************************************
  ** Local Defines
  *************************************************************************/
-#define SIM_PUBLISH_GPS
-#define SIM_PUBLISH_MPU9250
-#define SIM_PUBLISH_MS5611
-#define SIM_PUBLISH_ULR
+//#define SIM_PUBLISH_GPS
+//#define SIM_PUBLISH_ACCEL
+#define SIM_PUBLISH_MAG
+//#define SIM_PUBLISH_GYRO
+//#define SIM_PUBLISH_BARO
+#define SIM_PUBLISH_DISTANCE_SENSOR
 
 #define GYROSIM_ACCEL_DEFAULT_RATE	400
-
 #define GYROSIM_GYRO_DEFAULT_RATE	400
-#define CONSTANTS_ONE_G      9.80665f
-#define MG2MS2              (CONSTANTS_ONE_G / 1000.0f)
-#define NEW_SCALE_G_DIGIT   0.732e-3f
-#define NEW_SCALE_GA_DIGIT  0.479e-3f
+//#define CONSTANTS_ONE_G      9.80665f
+//#define MG2MS2              (CONSTANTS_ONE_G / 1000.0f)
+//#define NEW_SCALE_G_DIGIT   0.732e-3f
+//#define NEW_SCALE_GA_DIGIT  0.479e-3f
 
 /************************************************************************
  ** Local Structure Definitions
