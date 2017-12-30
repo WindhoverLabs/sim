@@ -816,7 +816,7 @@ void SIM::ListenerTask(void)
                                 SensorGyro.TemperatureRaw = (int16)((SensorGyro.Temperature - 35.0f) * 361.0f);
 #endif
 
-#if  !defined(SIM_PUBLISH_ACCEL) || !defined(SIM_PUBLISH_MAG) || !defined(SIM_PUBLISH_GYRO)
+#if  !defined(SIM_PUBLISH_ACCEL) || !defined(SIM_PUBLISH_MAG) || !defined(SIM_PUBLISH_GYRO) || !defined(SIM_PUBLISH_BARO)
 								SIMLIB_SetTemp(decodedMsg.temperature);
 #endif
 							}
