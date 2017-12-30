@@ -161,30 +161,35 @@ void SIM::InitData()
             PX4_VEHICLE_GPS_POSITION_MID, sizeof(PX4_VehicleGpsPositionMsg_t), TRUE);
 #endif
 
-#ifdef SIM_PUBLISH_MPU9250
+#ifdef SIM_PUBLISH_ACCEL
     /* Init output message accelerometer */
     CFE_SB_InitMsg(&SensorAccel,
             PX4_SENSOR_ACCEL_MID, sizeof(PX4_SensorAccelMsg_t), TRUE);
+#endif
+
+#ifdef SIM_PUBLISH_MAG
     /* Init output message magnetometer */
     CFE_SB_InitMsg(&SensorMag,
             PX4_SENSOR_MAG_MID, sizeof(PX4_SensorMagMsg_t), TRUE);
+#endif
+
+#ifdef SIM_PUBLISH_GYRO
     /* Init output message gyroscope */
     CFE_SB_InitMsg(&SensorGyro,
             PX4_SENSOR_GYRO_MID, sizeof(PX4_SensorGyroMsg_t), TRUE);
 #endif
 
-#ifdef SIM_PUBLISH_MS5611
+#ifdef SIM_PUBLISH_MAG
     /* Init output message baro */
     CFE_SB_InitMsg(&SensorBaro,
             PX4_SENSOR_BARO_MID, sizeof(PX4_SensorBaroMsg_t), TRUE);
 #endif
 
-#ifdef SIM_PUBLISH_ULR
+#ifdef SIM_PUBLISH_DISTANCE_SENSOR
     /* Init output messages */
     CFE_SB_InitMsg(&DistanceSensor,
         PX4_DISTANCE_SENSOR_MID, sizeof(PX4_DistanceSensorMsg_t), TRUE);
 #endif
-
 
 }
 
@@ -605,9 +610,11 @@ void SIM::ListenerTask_c(void)
 
 void SIM::ListenerTask(void)
 {
-#ifdef SIM_PUBLISH_MPU9250
+#ifdef SIM_PUBLISH_GYRO
     math::Vector3F gval;
     math::Vector3F gval_integrated;
+#endif
+#ifdef SIM_PUBLISH_ACCEL
     math::Vector3F aval;
     math::Vector3F aval_integrated;
 #endif
@@ -670,7 +677,7 @@ void SIM::ListenerTask(void)
 
 							if(decodedMsg.fields_updated & 0x00000007)
 							{
-#ifdef SIM_PUBLISH_MPU9250
+#ifdef SIM_PUBLISH_ACCEL
                                 //SensorAccel.Scaling = NEW_SCALE_G_DIGIT * CONSTANTS_ONE_G;
                                 SensorAccel.Scaling = 0;
                                 SensorAccel.Range_m_s2 = 0;
@@ -706,7 +713,7 @@ void SIM::ListenerTask(void)
 
 							if(decodedMsg.fields_updated & 0x00000038)
 							{
-#ifdef SIM_PUBLISH_MPU9250
+#ifdef SIM_PUBLISH_GYRO
                                 SensorGyro.Scaling = 0;
                                 SensorGyro.Range = 0;
                                 SensorGyro.Timestamp = PX4LIB_GetPX4TimeUs();
@@ -740,7 +747,7 @@ void SIM::ListenerTask(void)
 
 							if(decodedMsg.fields_updated & 0x000001a0)
 							{
-#ifdef SIM_PUBLISH_MPU9250
+#ifdef SIM_PUBLISH_MAG
                                 SensorMag.Timestamp = PX4LIB_GetPX4TimeUs();
                                 SensorMag.Scaling = 0;
                                 SensorMag.Range = 0;
@@ -766,7 +773,7 @@ void SIM::ListenerTask(void)
 
 							if(decodedMsg.fields_updated & 0x00000600)
 							{
-#ifdef SIM_PUBLISH_MS5611
+#ifdef SIM_PUBLISH_BARO
                                 SensorBaro.Timestamp = PX4LIB_GetPX4TimeUs();
                                 SensorBaro.Pressure = decodedMsg.abs_pressure;
 #else
@@ -776,7 +783,7 @@ void SIM::ListenerTask(void)
 
 							if(decodedMsg.fields_updated & 0x00000800)
 							{
-#ifdef SIM_PUBLISH_MS5611       
+#ifdef SIM_PUBLISH_BARO       
                                 SensorBaro.Timestamp = PX4LIB_GetPX4TimeUs();
                                 SensorBaro.Altitude = decodedMsg.pressure_alt;
                                 /* fake device ID */
@@ -790,19 +797,23 @@ void SIM::ListenerTask(void)
 
 							if(decodedMsg.fields_updated & 0x00001000)
 							{
-#ifdef SIM_PUBLISH_MS5611
+#ifdef SIM_PUBLISH_BARO
                                 SensorBaro.Temperature = decodedMsg.temperature;
 #endif
 
-#ifdef SIM_PUBLISH_MPU9250
+#ifdef SIM_PUBLISH_ACCEL
                                 SensorAccel.Temperature = decodedMsg.temperature;
                                 SensorAccel.TemperatureRaw = (int16)((SensorAccel.Temperature - 35.0f) * 361.0f);
+#endif
+#ifdef SIM_PUBLISH_MAG
                                 SensorMag.Temperature = decodedMsg.temperature;
+#endif
+#ifdef SIM_PUBLISH_GYRO
                                 SensorGyro.Temperature = decodedMsg.temperature;
                                 SensorGyro.TemperatureRaw = (int16)((SensorGyro.Temperature - 35.0f) * 361.0f);
 #endif
 
-#if  !defined(SIM_PUBLISH_MS5611) || !defined(SIM_PUBLISH_MPU9250)
+#if  !defined(SIM_PUBLISH_ACCEL) || !defined(SIM_PUBLISH_MAG) || !defined(SIM_PUBLISH_GYRO) || !defined(SIM_PUBLISH_BARO)
 								SIMLIB_SetTemp(decodedMsg.temperature);
 #endif
 							}
@@ -880,7 +891,7 @@ void SIM::ListenerTask(void)
 
 							sensorType = (PX4_DistanceSensorType_t) decodedMsg.type;
 							sensorOrientation = (PX4_SensorOrientation_t) decodedMsg.orientation;
-#ifdef SIM_PUBLISH_ULR
+#ifdef SIM_PUBLISH_DISTANCE_SENSOR
                             DistanceSensor.Timestamp = PX4LIB_GetPX4TimeUs();
                             DistanceSensor.MinDistance = decodedMsg.min_distance / 100.0f;
                             DistanceSensor.MaxDistance = decodedMsg.max_distance / 100.0f;
