@@ -699,9 +699,6 @@ void SIM::ListenerTask(void)
                                 SensorAccel.DeviceID = 6789478;
                                 CFE_SB_TimeStampMsg((CFE_SB_Msg_t*)&SensorAccel);
                                 CFE_SB_SendMsg((CFE_SB_Msg_t*)&SensorAccel);
-                                SensorAccel.DeviceID = 0;
-                                CFE_SB_TimeStampMsg((CFE_SB_Msg_t*)&SensorAccel);
-                                CFE_SB_SendMsg((CFE_SB_Msg_t*)&SensorAccel);
 #else
 								SIMLIB_SetAccel(decodedMsg.xacc, decodedMsg.yacc, decodedMsg.zacc);
 #endif
