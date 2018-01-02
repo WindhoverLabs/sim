@@ -54,9 +54,26 @@ extern "C" {
 #include "sim_msg.h"
 #include "sim_events.h"
 #include "sim_tbldefs.h"
+#include "integrator.h"
+
+
+#include "px4_msgs.h"
 /************************************************************************
  ** Local Defines
  *************************************************************************/
+//#define SIM_PUBLISH_GPS
+#define SIM_PUBLISH_ACCEL
+#define SIM_PUBLISH_MAG
+#define SIM_PUBLISH_GYRO
+//#define SIM_PUBLISH_BARO
+#define SIM_PUBLISH_DISTANCE_SENSOR
+
+#define GYROSIM_ACCEL_DEFAULT_RATE	400
+#define GYROSIM_GYRO_DEFAULT_RATE	400
+//#define CONSTANTS_ONE_G      9.80665f
+//#define MG2MS2              (CONSTANTS_ONE_G / 1000.0f)
+//#define NEW_SCALE_G_DIGIT   0.732e-3f
+//#define NEW_SCALE_GA_DIGIT  0.479e-3f
 
 /************************************************************************
  ** Local Structure Definitions
@@ -93,6 +110,17 @@ public:
 
     /** \brief Housekeeping Telemetry for downlink */
     SIM_HkTlm_t HkTlm;
+
+	Integrator _accel_int;
+	Integrator _gyro_int;
+
+    /* All messages */
+    PX4_VehicleGpsPositionMsg_t     VehicleGps;
+    PX4_SensorAccelMsg_t            SensorAccel;
+    PX4_SensorMagMsg_t              SensorMag;
+    PX4_SensorGyroMsg_t             SensorGyro;
+    PX4_SensorBaroMsg_t             SensorBaro;
+    PX4_DistanceSensorMsg_t         DistanceSensor;
 
     int    Socket;
     int    SendPort;

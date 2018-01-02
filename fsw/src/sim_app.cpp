@@ -15,7 +15,11 @@
 #include <unistd.h>
 #include "mavlink.h"
 #include "simlib.h"
+#include "Vector3F.hpp"
+#include "integrator.h"
 
+
+#include "lib/px4lib.h"
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /*                                                                 */
@@ -31,7 +35,9 @@ SIM oSIM;
 /* Default constructor.                                            */
 /*                                                                 */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-SIM::SIM()
+SIM::SIM() :
+	_accel_int(1000000 / GYROSIM_ACCEL_DEFAULT_RATE, true),
+	_gyro_int(1000000 / GYROSIM_GYRO_DEFAULT_RATE, true)
 {
 
 }
@@ -148,6 +154,43 @@ void SIM::InitData()
     /* Init housekeeping message. */
     CFE_SB_InitMsg(&HkTlm,
     		SIM_HK_TLM_MID, sizeof(HkTlm), TRUE);
+
+#ifdef SIM_PUBLISH_GPS
+    /* Init output message GPS position */
+    CFE_SB_InitMsg(&VehicleGps,
+            PX4_VEHICLE_GPS_POSITION_MID, sizeof(PX4_VehicleGpsPositionMsg_t), TRUE);
+#endif
+
+#ifdef SIM_PUBLISH_ACCEL
+    /* Init output message accelerometer */
+    CFE_SB_InitMsg(&SensorAccel,
+            PX4_SENSOR_ACCEL_MID, sizeof(PX4_SensorAccelMsg_t), TRUE);
+#endif
+
+#ifdef SIM_PUBLISH_MAG
+    /* Init output message magnetometer */
+    CFE_SB_InitMsg(&SensorMag,
+            PX4_SENSOR_MAG_MID, sizeof(PX4_SensorMagMsg_t), TRUE);
+#endif
+
+#ifdef SIM_PUBLISH_GYRO
+    /* Init output message gyroscope */
+    CFE_SB_InitMsg(&SensorGyro,
+            PX4_SENSOR_GYRO_MID, sizeof(PX4_SensorGyroMsg_t), TRUE);
+#endif
+
+#ifdef SIM_PUBLISH_MAG
+    /* Init output message baro */
+    CFE_SB_InitMsg(&SensorBaro,
+            PX4_SENSOR_BARO_MID, sizeof(PX4_SensorBaroMsg_t), TRUE);
+#endif
+
+#ifdef SIM_PUBLISH_DISTANCE_SENSOR
+    /* Init output messages */
+    CFE_SB_InitMsg(&DistanceSensor,
+        PX4_DISTANCE_SENSOR_MID, sizeof(PX4_DistanceSensorMsg_t), TRUE);
+#endif
+
 }
 
 
@@ -597,6 +640,14 @@ void SIM::SetRates(void)
 
 void SIM::ListenerTask(void)
 {
+#ifdef SIM_PUBLISH_GYRO
+    math::Vector3F gval;
+    math::Vector3F gval_integrated;
+#endif
+#ifdef SIM_PUBLISH_ACCEL
+    math::Vector3F aval;
+    math::Vector3F aval_integrated;
+#endif
 	char buffer[SIM_MAX_MESSAGE_SIZE] = {};
 	int32 size = SIM_MAX_MESSAGE_SIZE;
 
@@ -659,33 +710,146 @@ void SIM::ListenerTask(void)
 
 							if(decodedMsg.fields_updated & 0x00000007)
 							{
+#ifdef SIM_PUBLISH_ACCEL
+                                //SensorAccel.Scaling = NEW_SCALE_G_DIGIT * CONSTANTS_ONE_G;
+                                SensorAccel.Scaling = 0;
+                                SensorAccel.Range_m_s2 = 0;
+                                SensorAccel.Timestamp = PX4LIB_GetPX4TimeUs();
+                                //SensorAccel.XRaw = (int16)((decodedMsg.xacc / MG2MS2) / SensorAccel.Scaling);
+                                //SensorAccel.YRaw = (int16)((decodedMsg.yacc / MG2MS2) / SensorAccel.Scaling);
+                                //SensorAccel.ZRaw = (int16)((decodedMsg.zacc / MG2MS2) / SensorAccel.Scaling);
+                                SensorAccel.XRaw = 0;
+                                SensorAccel.YRaw = 0;
+                                SensorAccel.ZRaw = 0;
+                                SensorAccel.X = decodedMsg.xacc;
+                                SensorAccel.Y = decodedMsg.yacc;
+                                SensorAccel.Z = decodedMsg.zacc;
+                                /* Accel Integrate */
+                                aval[0] = SensorAccel.X;
+                                aval[1] = SensorAccel.Y;
+                                aval[2] = SensorAccel.Z;
+                                aval_integrated[0] = 0.0f;
+                                aval_integrated[1] = 0.0f;
+                                aval_integrated[2] = 0.0f;
+                                _accel_int.put(SensorAccel.Timestamp, aval, aval_integrated, SensorAccel.IntegralDt);
+                                SensorAccel.XIntegral = aval_integrated[0];
+                                SensorAccel.YIntegral = aval_integrated[1];
+                                SensorAccel.ZIntegral = aval_integrated[2];
+                                /* fake device id */
+                                SensorAccel.DeviceID = 6789478;
+                                CFE_SB_TimeStampMsg((CFE_SB_Msg_t*)&SensorAccel);
+                                CFE_SB_SendMsg((CFE_SB_Msg_t*)&SensorAccel);
+#else
 								SIMLIB_SetAccel(decodedMsg.xacc, decodedMsg.yacc, decodedMsg.zacc);
+#endif
 							}
 
 							if(decodedMsg.fields_updated & 0x00000038)
 							{
+#ifdef SIM_PUBLISH_GYRO
+                                SensorGyro.Scaling = 0;
+                                SensorGyro.Range = 0;
+                                SensorGyro.Timestamp = PX4LIB_GetPX4TimeUs();
+                                //SensorGyro.XRaw = (int16)(decodedMsg.xgyro * 1000.0f);
+                                //SensorGyro.YRaw = (int16)(decodedMsg.ygyro * 1000.0f);
+                                //SensorGyro.ZRaw = (int16)(decodedMsg.zgyro * 1000.0f);
+                                SensorGyro.XRaw = 0;
+                                SensorGyro.YRaw = 0;
+                                SensorGyro.ZRaw = 0;
+                                SensorGyro.X = decodedMsg.xgyro;
+                                SensorGyro.Y = decodedMsg.ygyro;
+                                SensorGyro.Z = decodedMsg.zgyro;
+                                gval[0] = SensorGyro.X;
+                                gval[1] = SensorGyro.Y;
+                                gval[2] = SensorGyro.Z;
+                                gval_integrated[0] = 0.0f;
+                                gval_integrated[1] = 0.0f;
+                                gval_integrated[2] = 0.0f;
+                                _gyro_int.put(SensorGyro.Timestamp, gval, gval_integrated, SensorGyro.IntegralDt);
+                                SensorGyro.XIntegral = gval_integrated[0];
+                                SensorGyro.YIntegral = gval_integrated[1];
+                                SensorGyro.ZIntegral = gval_integrated[2];
+                                /* fake device ID */
+                                SensorGyro.DeviceID = 3467548;
+                                CFE_SB_TimeStampMsg((CFE_SB_Msg_t*)&SensorGyro);
+                                CFE_SB_SendMsg((CFE_SB_Msg_t*)&SensorGyro);
+#else
 								SIMLIB_SetGyro(decodedMsg.xgyro, decodedMsg.ygyro, decodedMsg.zgyro);
+#endif
 							}
 
 							if(decodedMsg.fields_updated & 0x000001a0)
 							{
+#ifdef SIM_PUBLISH_MAG
+                                SensorMag.Timestamp = PX4LIB_GetPX4TimeUs();
+                                SensorMag.Scaling = 0;
+                                SensorMag.Range = 0;
+                                //SensorMag.XRaw = (int16)((decodedMsg.xmag * 1000.0f) / NEW_SCALE_GA_DIGIT);
+                                //SensorMag.YRaw = (int16)((decodedMsg.ymag * 1000.0f) / NEW_SCALE_GA_DIGIT);
+                                //SensorMag.ZRaw = (int16)((decodedMsg.zmag * 1000.0f) / NEW_SCALE_GA_DIGIT);
+                                //SensorMag.XRaw = (int16)((decodedMsg.xmag * 1000.0f));
+                                //SensorMag.YRaw = (int16)((decodedMsg.ymag * 1000.0f));
+                                //SensorMag.ZRaw = (int16)((decodedMsg.zmag * 1000.0f));
+                                SensorMag.XRaw = 0;
+                                SensorMag.YRaw = 0;
+                                SensorMag.ZRaw = 0;
+                                SensorMag.X = decodedMsg.xmag;
+                                SensorMag.Y = decodedMsg.ymag;
+                                SensorMag.Z = decodedMsg.zmag;
+                                CFE_SB_TimeStampMsg((CFE_SB_Msg_t*)&SensorMag);
+                                CFE_SB_SendMsg((CFE_SB_Msg_t*)&SensorMag);
+#else
 								SIMLIB_SetMag(decodedMsg.xmag, decodedMsg.ymag, decodedMsg.zmag);
+
+#endif
 							}
 
 							if(decodedMsg.fields_updated & 0x00000600)
 							{
+#ifdef SIM_PUBLISH_BARO
+                                SensorBaro.Timestamp = PX4LIB_GetPX4TimeUs();
+                                SensorBaro.Pressure = decodedMsg.abs_pressure;
+#else
 								SIMLIB_SetPressure(decodedMsg.abs_pressure, decodedMsg.diff_pressure);
+#endif
 							}
 
 							if(decodedMsg.fields_updated & 0x00000800)
 							{
+#ifdef SIM_PUBLISH_BARO       
+                                SensorBaro.Timestamp = PX4LIB_GetPX4TimeUs();
+                                SensorBaro.Altitude = decodedMsg.pressure_alt;
+                                /* fake device ID */
+                                //SensorBaro.DeviceID = 478459;
+                                CFE_SB_TimeStampMsg((CFE_SB_Msg_t*)&SensorBaro);
+                                CFE_SB_SendMsg((CFE_SB_Msg_t*)&SensorBaro);
+#else
 								SIMLIB_SetPressureAltitude(decodedMsg.pressure_alt);
+#endif
 							}
 
 							if(decodedMsg.fields_updated & 0x00001000)
 							{
+#ifdef SIM_PUBLISH_BARO
+                                SensorBaro.Temperature = decodedMsg.temperature;
+#endif
+
+#ifdef SIM_PUBLISH_ACCEL
+                                SensorAccel.Temperature = decodedMsg.temperature;
+                                SensorAccel.TemperatureRaw = (int16)((SensorAccel.Temperature - 35.0f) * 361.0f);
+#endif
+#ifdef SIM_PUBLISH_MAG
+                                SensorMag.Temperature = decodedMsg.temperature;
+#endif
+#ifdef SIM_PUBLISH_GYRO
+                                SensorGyro.Temperature = decodedMsg.temperature;
+                                SensorGyro.TemperatureRaw = (int16)((SensorGyro.Temperature - 35.0f) * 361.0f);
+#endif
+
 								SIMLIB_SetTemp(decodedMsg.temperature);
 							}
+                            
+                            
 
 							break;
 						}
@@ -694,6 +858,23 @@ void SIM::ListenerTask(void)
 						{
 							mavlink_hil_gps_t 					decodedMsg;
 							mavlink_msg_hil_gps_decode(&msg, &decodedMsg);
+#ifdef SIM_PUBLISH_GPS
+                            VehicleGps.Timestamp      = PX4LIB_GetPX4TimeUs();
+                            VehicleGps.Lat            = decodedMsg.lat;
+                            VehicleGps.Lon            = decodedMsg.lon;
+                            VehicleGps.Alt            = decodedMsg.alt;
+                            VehicleGps.EpH            = (float)decodedMsg.eph * 1e-2f;
+                            VehicleGps.EpV            = (float)decodedMsg.epv * 1e-2f;
+                            VehicleGps.Vel_m_s        = (float)decodedMsg.vel / 100.0f;
+                            VehicleGps.Vel_n_m_s      = (float)decodedMsg.vn / 100.0f;
+                            VehicleGps.Vel_e_m_s      = (float)decodedMsg.ve / 100.0f;
+                            VehicleGps.Vel_d_m_s      = (float)decodedMsg.vd / 100.0f;
+                            VehicleGps.COG            = (float)decodedMsg.cog * 3.1415f / (100.0f * 180.0f);
+                            VehicleGps.FixType        = decodedMsg.fix_type;
+                            VehicleGps.SatellitesUsed = decodedMsg.satellites_visible;
+                            CFE_SB_TimeStampMsg((CFE_SB_Msg_t*)&VehicleGps);
+                            CFE_SB_SendMsg((CFE_SB_Msg_t*)&VehicleGps);
+#else
 							SIMLIB_SetGPS(
 								(PX4_GpsFixType_t)decodedMsg.fix_type,
 								decodedMsg.lat,
@@ -707,6 +888,7 @@ void SIM::ListenerTask(void)
 								decodedMsg.vd,
 								decodedMsg.cog,
 								decodedMsg.satellites_visible);
+#endif
 							break;
 						}
 
@@ -740,7 +922,18 @@ void SIM::ListenerTask(void)
 
 							sensorType = (PX4_DistanceSensorType_t) decodedMsg.type;
 							sensorOrientation = (PX4_SensorOrientation_t) decodedMsg.orientation;
-
+#ifdef SIM_PUBLISH_DISTANCE_SENSOR
+                            DistanceSensor.Timestamp = PX4LIB_GetPX4TimeUs();
+                            DistanceSensor.MinDistance = decodedMsg.min_distance / 100.0f;
+                            DistanceSensor.MaxDistance = decodedMsg.max_distance / 100.0f;
+                            DistanceSensor.CurrentDistance = decodedMsg.current_distance / 100.0f;
+                            DistanceSensor.Type = sensorType;
+                            DistanceSensor.ID = decodedMsg.id;
+                            DistanceSensor.Orientation = sensorOrientation;
+                            DistanceSensor.Covariance = decodedMsg.covariance / 100.0f;
+                            CFE_SB_TimeStampMsg((CFE_SB_Msg_t*)&DistanceSensor);
+                            CFE_SB_SendMsg((CFE_SB_Msg_t*)&DistanceSensor);
+#else
 							SIMLIB_SetDistanceSensor(
 									decodedMsg.min_distance,
 									decodedMsg.max_distance,
@@ -749,7 +942,7 @@ void SIM::ListenerTask(void)
 									decodedMsg.id,
 									sensorOrientation,
 									decodedMsg.covariance);
-
+#endif
 							break;
 						}
 
