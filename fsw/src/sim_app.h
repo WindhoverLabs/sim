@@ -63,10 +63,10 @@ extern "C" {
  *************************************************************************/
 //#define SIM_PUBLISH_GPS
 #define SIM_PUBLISH_ACCEL
-#define SIM_PUBLISH_MAG
+//#define SIM_PUBLISH_MAG
 #define SIM_PUBLISH_GYRO
-#define SIM_PUBLISH_BARO
-#define SIM_PUBLISH_DISTANCE_SENSOR
+//#define SIM_PUBLISH_BARO
+//#define SIM_PUBLISH_DISTANCE_SENSOR
 
 #define GYROSIM_ACCEL_DEFAULT_RATE	400
 #define GYROSIM_GYRO_DEFAULT_RATE	400
