@@ -608,6 +608,36 @@ void SIM::ListenerTask_c(void)
 	oSIM.ListenerTask();
 }
 
+
+void SIM::SetRates(void)
+{
+	mavlink_message_t msg;
+	uint8 buffer[MAVLINK_MAX_PACKET_LEN];
+	mavlink_command_long_t cmdLongMsg;
+	uint32 length = 0;
+
+	//send MAV_CMD_SET_MESSAGE_INTERVAL for HIL_STATE_QUATERNION ground truth
+	cmdLongMsg.command = MAV_CMD_SET_MESSAGE_INTERVAL;
+	cmdLongMsg.param1 = MAVLINK_MSG_ID_HIL_STATE_QUATERNION;
+	cmdLongMsg.param2 = 5e3;
+
+	mavlink_msg_command_long_encode(1, 1, &msg, &cmdLongMsg);
+	length = mavlink_msg_to_send_buffer(buffer, &msg);
+
+	if(Socket != 0)
+	{
+		struct sockaddr_in simAddr;
+		int len = sizeof(simAddr);
+
+	    bzero((char *) &simAddr, sizeof(simAddr));
+	    simAddr.sin_family      = AF_INET;
+	    simAddr.sin_addr.s_addr = inet_addr(SendAddress);
+	    simAddr.sin_port        = htons(SendPort);
+
+		sendto(Socket, (char *)buffer, length, 0, (const struct sockaddr *)&simAddr, (socklen_t )len);
+	}
+}
+
 void SIM::ListenerTask(void)
 {
 #ifdef SIM_PUBLISH_GYRO
@@ -650,7 +680,10 @@ void SIM::ListenerTask(void)
 
 			if(port != SendPort)
 			{
-				/* This is a new connection.  Inform the simlib code. */
+				/* This is a new connection.  Set the message rates and inform
+				 * the simlib code. */
+				SetRates();
+
 				strncpy(SendAddress, addr, sizeof(SendAddress));
 				SendPort = port;
 				SIMLIB_SetSocket(Socket, SendPort, SendAddress);
