@@ -98,6 +98,8 @@ public:
     int    SendPort;
     char   SendAddress[255];
 
+    void SetRates(void);
+
     /************************************************************************/
     /** \brief Simulator Interface (SIM) application entry point
      **
