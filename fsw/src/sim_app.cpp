@@ -802,14 +802,16 @@ void SIM::ListenerTask(void)
 #endif
 
 #ifdef SIM_PUBLISH_ACCEL
-                                SensorAccel.Temperature = decodedMsg.temperature;
+                                //SensorAccel.Temperature = decodedMsg.temperature;
+                                SensorAccel.Temperature = 32;
                                 SensorAccel.TemperatureRaw = (int16)((SensorAccel.Temperature - 35.0f) * 361.0f);
 #endif
 #ifdef SIM_PUBLISH_MAG
                                 SensorMag.Temperature = decodedMsg.temperature;
 #endif
 #ifdef SIM_PUBLISH_GYRO
-                                SensorGyro.Temperature = decodedMsg.temperature;
+                                //SensorGyro.Temperature = decodedMsg.temperature;
+                                SensorGyro.Temperature = 32;
                                 SensorGyro.TemperatureRaw = (int16)((SensorGyro.Temperature - 35.0f) * 361.0f);
 #endif
 
