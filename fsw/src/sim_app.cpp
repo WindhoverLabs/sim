@@ -16,7 +16,7 @@
 #include "mavlink.h"
 #include "simlib.h"
 #include "Vector3F.hpp"
-#include "integrator.h"
+//#include "integrator.h"
 
 
 #include "lib/px4lib.h"
@@ -707,7 +707,6 @@ void SIM::ListenerTask(void)
 						{
 							mavlink_hil_sensor_t 				decodedMsg;
 							mavlink_msg_hil_sensor_decode(&msg, &decodedMsg);
-
 							if(decodedMsg.fields_updated & 0x00000007)
 							{
 #ifdef SIM_PUBLISH_ACCEL
@@ -833,7 +832,6 @@ void SIM::ListenerTask(void)
 #ifdef SIM_PUBLISH_BARO
                                 SensorBaro.Temperature = decodedMsg.temperature;
 #endif
-
 #ifdef SIM_PUBLISH_ACCEL
                                 SensorAccel.Temperature = decodedMsg.temperature;
                                 SensorAccel.TemperatureRaw = (int16)((SensorAccel.Temperature - 35.0f) * 361.0f);
