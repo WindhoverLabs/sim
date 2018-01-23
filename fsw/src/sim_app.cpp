@@ -826,22 +826,23 @@ void SIM::ListenerTask(void)
 								SIMLIB_SetPressureAltitude(decodedMsg.pressure_alt);
 #endif
 							}
-
-							if(decodedMsg.fields_updated & 0x00001000)
+                            /* TODO sitl gazebo mavlink plugin needs to be updated
+                             * to set bit 12, TRUE set for now... */
+							if(decodedMsg.fields_updated & 0x00001000 || TRUE)
 							{
 #ifdef SIM_PUBLISH_BARO
                                 SensorBaro.Temperature = decodedMsg.temperature;
 #endif
 #ifdef SIM_PUBLISH_ACCEL
                                 SensorAccel.Temperature = decodedMsg.temperature;
-                                SensorAccel.TemperatureRaw = (int16)((SensorAccel.Temperature - 35.0f) * 361.0f);
+                                SensorAccel.TemperatureRaw = (int16)((SensorAccel.Temperature - 21.0f) * 333.87f);
 #endif
 #ifdef SIM_PUBLISH_MAG
                                 SensorMag.Temperature = decodedMsg.temperature;
 #endif
 #ifdef SIM_PUBLISH_GYRO
                                 SensorGyro.Temperature = decodedMsg.temperature;
-                                SensorGyro.TemperatureRaw = (int16)((SensorGyro.Temperature - 35.0f) * 361.0f);
+                                SensorGyro.TemperatureRaw = (int16)((SensorGyro.Temperature -21.0f) * 333.87f);
 #endif
 
 								SIMLIB_SetTemp(decodedMsg.temperature);
