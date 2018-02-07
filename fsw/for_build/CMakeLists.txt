@@ -40,10 +40,6 @@ add_airliner_app_def(sim
         ${CMAKE_CURRENT_SOURCE_DIR}/../src/sim_msg.h
         ${CMAKE_CURRENT_SOURCE_DIR}/../src/sim_tbldefs.h
         ${CMAKE_CURRENT_SOURCE_DIR}/../src/sim_version.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/../src/Vector3F.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/../src/Vector3F.hpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/../src/integrator.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/../src/integrator.h
 
     INCLUDES
         ${CMAKE_CURRENT_SOURCE_DIR}/../src/
@@ -94,10 +90,8 @@ add_airliner_app_unit_test(sim-ut
         ${CMAKE_CURRENT_SOURCE_DIR}/../public_inc/simlib.h
         ${CMAKE_CURRENT_SOURCE_DIR}/../src/simlib_main.c
         ${CMAKE_CURRENT_SOURCE_DIR}/../unit_test/sim_custom_stubs.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/../src/Vector3F.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/../src/Vector3F.hpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/../src/integrator.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/../src/integrator.h
+        ${PX4LIB_LIB_SOURCES}
+        
     INCLUDES
         ${CMAKE_CURRENT_SOURCE_DIR}/../src/
         ${CMAKE_CURRENT_SOURCE_DIR}/../unit_test/

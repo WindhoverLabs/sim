@@ -54,7 +54,7 @@ extern "C" {
 #include "sim_msg.h"
 #include "sim_events.h"
 #include "sim_tbldefs.h"
-#include "integrator.h"
+#include "math/Integrator.hpp"
 
 
 #include "px4_msgs.h"

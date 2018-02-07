@@ -15,11 +15,11 @@
 #include <unistd.h>
 #include "mavlink.h"
 #include "simlib.h"
-#include "Vector3F.hpp"
+#include "math/Vector3F.hpp"
 //#include "integrator.h"
 
 
-#include "lib/px4lib.h"
+#include "px4lib.h"
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /*                                                                 */
