@@ -30,25 +30,6 @@
  # POSSIBILITY OF SUCH DAMAGE.
  #
  #############################################################################
-add_airliner_app_def(sim
-    FILE SIM
-    SOURCES
-        ${CMAKE_CURRENT_SOURCE_DIR}/../src/sim_app.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/../src/sim_app.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/../src/sim_config_utils.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/../src/sim_events.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/../src/sim_msg.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/../src/sim_tbldefs.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/../src/sim_version.h
-
-    INCLUDES
-        ${CMAKE_CURRENT_SOURCE_DIR}/../src/
-        ${PROJECT_SOURCE_DIR}/mavlink/include/mavlink/v1.0/common/
-
-    USER_DOCS   ${CMAKE_CURRENT_SOURCE_DIR}/user_doxy.in
-    DESIGN_DOCS ${CMAKE_CURRENT_SOURCE_DIR}/detail_doxy.in
-)
-
 add_airliner_app_def(simlib
     FILE SIMLIB
     SOURCES
@@ -66,6 +47,25 @@ add_airliner_app_def(simlib
 
     USER_DOCS   ${CMAKE_CURRENT_SOURCE_DIR}/lib_user_doxy.in
     DESIGN_DOCS ${CMAKE_CURRENT_SOURCE_DIR}/lib_detail_doxy.in
+)
+
+add_airliner_app_def(sim
+    FILE SIM
+    SOURCES
+        ${CMAKE_CURRENT_SOURCE_DIR}/../src/sim_app.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/../src/sim_app.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/../src/sim_config_utils.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/../src/sim_events.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/../src/sim_msg.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/../src/sim_tbldefs.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/../src/sim_version.h
+
+    INCLUDES
+        ${CMAKE_CURRENT_SOURCE_DIR}/../src/
+        ${PROJECT_SOURCE_DIR}/mavlink/include/mavlink/v1.0/common/
+
+    USER_DOCS   ${CMAKE_CURRENT_SOURCE_DIR}/user_doxy.in
+    DESIGN_DOCS ${CMAKE_CURRENT_SOURCE_DIR}/detail_doxy.in
 )
 
 add_airliner_app_unit_test(sim-ut
