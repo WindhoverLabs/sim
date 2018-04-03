@@ -575,7 +575,7 @@ int32 SIM::ListenerInit()
 				NULL,
 				SIM_LISTENER_TASK_STACK_SIZE,
 				SIM_LISTENER_TASK_PRIORITY,
-				OS_FP_ENABLED);
+				SIM_LISTENER_TASK_FLAGS);
 
 end_of_function:
     return Status;
