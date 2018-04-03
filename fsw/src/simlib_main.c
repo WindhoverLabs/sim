@@ -647,9 +647,9 @@ int32 SIMLIB_SetActuatorControls(
 {
 	int32 iStatus = SIMLIB_OK_NO_VALUE;
 	uint32 i = 0;
-	mavlink_message_t msg;
+	mavlink_message_t msg = {};
 	uint8 buffer[MAVLINK_MAX_PACKET_LEN];
-	mavlink_hil_actuator_controls_t actuatorControlsMsg;
+	mavlink_hil_actuator_controls_t actuatorControlsMsg = {};
 	uint32 length = 0;
     //struct sockaddr_in si_sim;
 
@@ -671,6 +671,7 @@ int32 SIMLIB_SetActuatorControls(
 
 	OS_MutSemTake(SIMLIB_LibData.MutexID);
 
+    /* Copy just the control count into SIMLIB data */
 	for(i=0; i < ControlCount; ++i)
 	{
 		SIMLIB_LibData.ActuatorControlsData.Control[i] = Control[i];
@@ -678,14 +679,15 @@ int32 SIMLIB_SetActuatorControls(
 	SIMLIB_LibData.ActuatorControlsData.Mode = Mode;
 	SIMLIB_LibData.ActuatorControlsData.DataState = SIMLIB_OK_FRESH;
 
+    /* Copy the full contents from SIMLIB data */
+	for(i=0; i < 16; ++i)
+	{
+		actuatorControlsMsg.controls[i] = SIMLIB_LibData.ActuatorControlsData.Control[i];
+	}
 	OS_MutSemGive(SIMLIB_LibData.MutexID);
 
 	actuatorControlsMsg.time_usec = 0;
 	actuatorControlsMsg.flags = 0;
-	for(i=0; i < ControlCount; ++i)
-	{
-		actuatorControlsMsg.controls[i] = Control[i];
-	}
 	actuatorControlsMsg.mode = 129;
 
 	mavlink_msg_hil_actuator_controls_encode(1, 1, &msg, &actuatorControlsMsg);
@@ -710,6 +712,32 @@ end_of_function:
     return iStatus;
 }
 
+
+int32 SIMLIB_SetLandingGearControls(
+		const float *Control,
+		uint32 LeftGearIndex, uint32 RightGearIndex)
+{
+	int32 iStatus = SIMLIB_OK_NO_VALUE;
+	uint32 i = 0;
+
+	if(Control == 0)
+	{
+		iStatus = SIMLIB_INVALID_PARAM;
+		goto end_of_function;
+	}
+
+	OS_MutSemTake(SIMLIB_LibData.MutexID);
+
+    SIMLIB_LibData.ActuatorControlsData.Control[LeftGearIndex] = Control[LeftGearIndex];
+    SIMLIB_LibData.ActuatorControlsData.Control[RightGearIndex] = Control[RightGearIndex];
+
+	OS_MutSemGive(SIMLIB_LibData.MutexID);
+
+	iStatus = SIMLIB_OK;
+
+end_of_function:
+    return iStatus;
+}
 
 
 int32 SIMLIB_GetDistanceSensor(
