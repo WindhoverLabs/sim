@@ -921,6 +921,8 @@ void SIM::ListenerTask(void)
 
 							sensorType = (PX4_DistanceSensorType_t) decodedMsg.type;
 							sensorOrientation = (PX4_SensorOrientation_t) decodedMsg.orientation;
+                            if (sensorType == 0) //lidar
+                            {
 #ifdef SIM_PUBLISH_DISTANCE_SENSOR
                             DistanceSensor.Timestamp = PX4LIB_GetPX4TimeUs();
                             DistanceSensor.MinDistance = decodedMsg.min_distance / 100.0f;
@@ -942,6 +944,7 @@ void SIM::ListenerTask(void)
 									sensorOrientation,
 									decodedMsg.covariance);
 #endif
+                            }
 							break;
 						}
 
