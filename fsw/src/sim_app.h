@@ -351,6 +351,7 @@ private:
     void  StopChild(void);
     uint32 MutexID;
 
+
 public:
     /************************************************************************/
     /** \brief Validate SIM configuration table

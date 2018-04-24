@@ -118,6 +118,9 @@ int32 SIMLIB_SetDistanceSensor(
 void SIMLIB_SetSocket(int Socket, int Port, char *Address);
 
 
+int32 SIMLIB_SendHeartbeat(void);
+
+
 #ifdef __cplusplus
 }
 #endif

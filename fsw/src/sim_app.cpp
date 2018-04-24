@@ -698,6 +698,7 @@ void SIM::ListenerTask(void)
 					{
 						case MAVLINK_MSG_ID_HIL_RC_INPUTS_RAW:
 						{
+							OS_printf("MAVLINK_MSG_ID_HIL_RC_INPUTS_RAW\n");
 							mavlink_hil_rc_inputs_raw_t 		decodedMsg;
 							mavlink_msg_hil_rc_inputs_raw_decode(&msg, &decodedMsg);
 							break;
@@ -707,8 +708,11 @@ void SIM::ListenerTask(void)
 						{
 							mavlink_hil_sensor_t 				decodedMsg;
 							mavlink_msg_hil_sensor_decode(&msg, &decodedMsg);
+
+#ifdef SIM_CHECK_UPDATED_FIELDS
 							if(decodedMsg.fields_updated & 0x00000007)
 							{
+#endif
 #ifdef SIM_PUBLISH_ACCEL
                                 //SensorAccel.Scaling = NEW_SCALE_G_DIGIT * CONSTANTS_ONE_G;
                                 SensorAccel.Scaling = 0;
@@ -741,10 +745,14 @@ void SIM::ListenerTask(void)
 #else
 								SIMLIB_SetAccel(decodedMsg.xacc, decodedMsg.yacc, decodedMsg.zacc);
 #endif
+#ifdef SIM_CHECK_UPDATED_FIELDS
 							}
+#endif
 
+#ifdef SIM_CHECK_UPDATED_FIELDS
 							if(decodedMsg.fields_updated & 0x00000038)
 							{
+#endif
 #ifdef SIM_PUBLISH_GYRO
                                 SensorGyro.Scaling = 0;
                                 SensorGyro.Range = 0;
@@ -775,10 +783,14 @@ void SIM::ListenerTask(void)
 #else
 								SIMLIB_SetGyro(decodedMsg.xgyro, decodedMsg.ygyro, decodedMsg.zgyro);
 #endif
+#ifdef SIM_CHECK_UPDATED_FIELDS
 							}
+#endif
 
+#ifdef SIM_CHECK_UPDATED_FIELDS
 							if(decodedMsg.fields_updated & 0x000001a0)
 							{
+#endif
 #ifdef SIM_PUBLISH_MAG
                                 SensorMag.Timestamp = PX4LIB_GetPX4TimeUs();
                                 SensorMag.Scaling = 0;
@@ -801,20 +813,30 @@ void SIM::ListenerTask(void)
 								SIMLIB_SetMag(decodedMsg.xmag, decodedMsg.ymag, decodedMsg.zmag);
 
 #endif
-							}
 
+#ifdef SIM_CHECK_UPDATED_FIELDS
+							}
+#endif
+
+
+#ifdef SIM_CHECK_UPDATED_FIELDS
 							if(decodedMsg.fields_updated & 0x00000600)
 							{
+#endif
 #ifdef SIM_PUBLISH_BARO
                                 SensorBaro.Timestamp = PX4LIB_GetPX4TimeUs();
                                 SensorBaro.Pressure = decodedMsg.abs_pressure;
 #else
 								SIMLIB_SetPressure(decodedMsg.abs_pressure, decodedMsg.diff_pressure);
 #endif
-							}
+#ifdef SIM_CHECK_UPDATED_FIELDS
+						    }
+#endif
 
+#ifdef SIM_CHECK_UPDATED_FIELDS
 							if(decodedMsg.fields_updated & 0x00000800)
-							{
+                            {
+#endif
 #ifdef SIM_PUBLISH_BARO       
                                 SensorBaro.Timestamp = PX4LIB_GetPX4TimeUs();
                                 SensorBaro.Altitude = decodedMsg.pressure_alt;
@@ -825,11 +847,16 @@ void SIM::ListenerTask(void)
 #else
 								SIMLIB_SetPressureAltitude(decodedMsg.pressure_alt);
 #endif
-							}
+#ifdef SIM_CHECK_UPDATED_FIELDS
+						    }
+#endif
+
                             /* TODO sitl gazebo mavlink plugin needs to be updated
                              * to set bit 12, TRUE set for now... */
+#ifdef SIM_CHECK_UPDATED_FIELDS
 							if(decodedMsg.fields_updated & 0x00001000 || TRUE)
 							{
+#endif
 #ifdef SIM_PUBLISH_BARO
                                 SensorBaro.Temperature = decodedMsg.temperature;
 #endif
@@ -846,9 +873,9 @@ void SIM::ListenerTask(void)
 #endif
 
 								SIMLIB_SetTemp(decodedMsg.temperature);
+#ifdef SIM_CHECK_UPDATED_FIELDS
 							}
-                            
-                            
+#endif
 
 							break;
 						}
@@ -945,8 +972,18 @@ void SIM::ListenerTask(void)
 							break;
 						}
 
+						case MAVLINK_MSG_ID_HEARTBEAT:
+							SIMLIB_SendHeartbeat();
+							break;
+
+						case MAVLINK_MSG_ID_SYSTEM_TIME:
+							break;
+
+						case MAVLINK_MSG_ID_SET_MODE:
+							break;
+
 						default:
-							printf("\nReceived packet: SYS: %d, COMP: %d, LEN: %d, MSG ID: %d\n", msg.sysid, msg.compid, msg.len, msg.msgid);
+							OS_printf("Received packet: SYS: %d, COMP: %d, LEN: %d, MSG ID: %d\n", msg.sysid, msg.compid, msg.len, msg.msgid);
 							break;
 					}
 				}
@@ -956,8 +993,6 @@ void SIM::ListenerTask(void)
 
 	CFE_ES_ExitChildTask();
 }
-
-
 
 
 /************************/
