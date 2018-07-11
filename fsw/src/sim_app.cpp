@@ -928,7 +928,6 @@ void SIM::ListenerTask(void)
 						{
 							mavlink_hil_optical_flow_t 			decodedMsg;
 							mavlink_msg_hil_optical_flow_decode(&msg, &decodedMsg);
-							OS_printf("rcvd oflow\n");
 							
 #ifdef SIM_PUBLISH_OPTICAL_FLOW
                         	OpticalFlow.Timestamp                       = PX4LIB_GetPX4TimeUs();
@@ -938,7 +937,7 @@ void SIM::ListenerTask(void)
 	                        OpticalFlow.GyroYRateIntegral               = decodedMsg.integrated_ygyro;
 	                        OpticalFlow.GyroZRateIntegral               = decodedMsg.integrated_zgyro;
 	                        OpticalFlow.GroundDistance                  = decodedMsg.distance;
-	                        OpticalFlow.IntegrationTimespan;            = decodedMsg.integration_time_us;
+	                        OpticalFlow.IntegrationTimespan             = decodedMsg.integration_time_us;
 	                        OpticalFlow.TimeSinceLastSonarUpdate        = decodedMsg.time_delta_distance_us;
 	                        OpticalFlow.GyroTemperature                 = decodedMsg.temperature;
 	                        OpticalFlow.SensorID                        = decodedMsg.sensor_id;
