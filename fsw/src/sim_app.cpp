@@ -191,6 +191,12 @@ void SIM::InitData()
         PX4_DISTANCE_SENSOR_MID, sizeof(PX4_DistanceSensorMsg_t), TRUE);
 #endif
 
+#ifdef SIM_PUBLISH_OPTICAL_FLOW
+    /* Init output messages */
+    CFE_SB_InitMsg(&OpticalFlow,
+        PX4_OPTICAL_FLOW_MID, sizeof(PX4_OpticalFlowMsg_t), TRUE);
+#endif
+
 }
 
 
@@ -922,6 +928,25 @@ void SIM::ListenerTask(void)
 						{
 							mavlink_hil_optical_flow_t 			decodedMsg;
 							mavlink_msg_hil_optical_flow_decode(&msg, &decodedMsg);
+							OS_printf("rcvd oflow\n");
+							
+#ifdef SIM_PUBLISH_OPTICAL_FLOW
+                        	OpticalFlow.Timestamp                       = PX4LIB_GetPX4TimeUs();
+	                        OpticalFlow.PixelFlowXIntegral              = decodedMsg.integrated_x;
+	                        OpticalFlow.PixelFlowYIntegral              = decodedMsg.integrated_y; 
+	                        OpticalFlow.GyroXRateIntegral               = decodedMsg.integrated_xgyro;
+	                        OpticalFlow.GyroYRateIntegral               = decodedMsg.integrated_ygyro;
+	                        OpticalFlow.GyroZRateIntegral               = decodedMsg.integrated_zgyro;
+	                        OpticalFlow.GroundDistance                  = decodedMsg.distance;
+	                        OpticalFlow.IntegrationTimespan;            = decodedMsg.integration_time_us;
+	                        OpticalFlow.TimeSinceLastSonarUpdate        = decodedMsg.time_delta_distance_us;
+	                        OpticalFlow.GyroTemperature                 = decodedMsg.temperature;
+	                        OpticalFlow.SensorID                        = decodedMsg.sensor_id;
+	                        OpticalFlow.Quality                         = decodedMsg.quality;
+	                        
+	                        CFE_SB_TimeStampMsg((CFE_SB_Msg_t*)&OpticalFlow);
+                            CFE_SB_SendMsg((CFE_SB_Msg_t*)&OpticalFlow);
+#endif
 							break;
 						}
 
