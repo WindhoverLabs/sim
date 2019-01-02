@@ -67,6 +67,7 @@ extern "C" {
 //#define SIM_PUBLISH_GYRO
 //#define SIM_PUBLISH_BARO
 //#define SIM_PUBLISH_DISTANCE_SENSOR
+//#define SIM_PUBLISH_OPTICAL_FLOW
 
 #define GYROSIM_ACCEL_DEFAULT_RATE	400
 #define GYROSIM_GYRO_DEFAULT_RATE	400
@@ -121,6 +122,7 @@ public:
     PX4_SensorGyroMsg_t             SensorGyro;
     PX4_SensorBaroMsg_t             SensorBaro;
     PX4_DistanceSensorMsg_t         DistanceSensor;
+    PX4_OpticalFlowMsg_t            OpticalFlow;
 
     int    Socket;
     int    SendPort;
@@ -350,6 +352,7 @@ private:
     bool  ChildContinueExec(void);
     void  StopChild(void);
     uint32 MutexID;
+
 
 public:
     /************************************************************************/

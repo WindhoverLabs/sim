@@ -812,6 +812,43 @@ int32 SIMLIB_SetDistanceSensor(
 }
 
 
+int32 SIMLIB_SendHeartbeat(void)
+{
+	int32 iStatus = SIMLIB_OK_NO_VALUE;
+	uint32 i = 0;
+	mavlink_message_t msg = {};
+	uint8 buffer[MAVLINK_MAX_PACKET_LEN];
+	mavlink_heartbeat_t heartbeatMsg = {};
+	uint32 length = 0;
+
+	heartbeatMsg.type = MAV_TYPE_GENERIC;
+	heartbeatMsg.autopilot = MAV_AUTOPILOT_GENERIC;
+	heartbeatMsg.base_mode = 0; //MAV_MODE_FLAG_DECODE_POSITION_SAFETY + MAV_MODE_FLAG_DECODE_POSITION_CUSTOM_MODE;
+	heartbeatMsg.custom_mode = 0;
+	heartbeatMsg.system_status = MAV_STATE_ACTIVE;
+	heartbeatMsg.mavlink_version = 1;
+
+	mavlink_msg_heartbeat_encode(1, 1, &msg, &heartbeatMsg);
+	length = mavlink_msg_to_send_buffer(buffer, &msg);
+
+	if(SIMLIB_LibData.Socket != 0)
+	{
+		struct sockaddr_in simAddr;
+		int len = sizeof(simAddr);
+
+	    bzero((char *) &simAddr, sizeof(simAddr));
+	    simAddr.sin_family      = AF_INET;
+	    simAddr.sin_addr.s_addr = inet_addr(SIMLIB_LibData.SendAddress);
+	    simAddr.sin_port        = htons(SIMLIB_LibData.SendPort);
+
+		sendto(SIMLIB_LibData.Socket, (char *)buffer, length, 0, (const struct sockaddr *)&simAddr, (socklen_t )len);
+	}
+
+	iStatus = SIMLIB_OK;
+
+end_of_function:
+    return iStatus;
+}
 
 
 /************************/
