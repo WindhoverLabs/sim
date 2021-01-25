@@ -45,8 +45,11 @@ add_airliner_app_def(simlib
     PUBLIC_INCLUDES
         ${CMAKE_CURRENT_SOURCE_DIR}/../public_inc/
 
-    USER_DOCS   ${CMAKE_CURRENT_SOURCE_DIR}/lib_user_doxy.in
     DESIGN_DOCS ${CMAKE_CURRENT_SOURCE_DIR}/lib_detail_doxy.in
+    
+    REFERENCE_CONFIG
+        ${PROJECT_SOURCE_DIR}/apps/sim/fsw/mission_inc
+        ${PROJECT_SOURCE_DIR}/apps/sim/fsw/platform_inc
 )
 
 add_airliner_app_def(sim
@@ -64,12 +67,18 @@ add_airliner_app_def(sim
         ${CMAKE_CURRENT_SOURCE_DIR}/../src/
         ${PROJECT_SOURCE_DIR}/mavlink/include/mavlink/v1.0/common/
 
-    USER_DOCS   ${CMAKE_CURRENT_SOURCE_DIR}/user_doxy.in
     DESIGN_DOCS ${CMAKE_CURRENT_SOURCE_DIR}/detail_doxy.in
+    
+    REFERENCE_CONFIG
+        ${PROJECT_SOURCE_DIR}/apps/sim/fsw/mission_inc
+        ${PROJECT_SOURCE_DIR}/apps/sim/fsw/platform_inc
 )
 
 add_airliner_app_unit_test(sim-ut
     UTASSERT
+    NO_HELGRIND
+    NO_MASSIF
+        
     SOURCES
         ${CMAKE_CURRENT_SOURCE_DIR}/../unit_test/sim_app_test.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/../unit_test/sim_app_test.h
@@ -91,7 +100,7 @@ add_airliner_app_unit_test(sim-ut
         ${CMAKE_CURRENT_SOURCE_DIR}/../src/simlib_main.c
         ${CMAKE_CURRENT_SOURCE_DIR}/../unit_test/sim_custom_stubs.c
         ${PX4LIB_LIB_SOURCES}
-        
+
     INCLUDES
         ${CMAKE_CURRENT_SOURCE_DIR}/../src/
         ${CMAKE_CURRENT_SOURCE_DIR}/../unit_test/

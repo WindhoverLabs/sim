@@ -8,6 +8,7 @@
 #include "sim_platform_cfg.h"
 #include "mavlink.h"
 #include <arpa/inet.h>
+#include "px4lib_msgids.h"
 
 /*************************************************************************
 ** Macro Definitions

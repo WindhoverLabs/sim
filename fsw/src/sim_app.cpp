@@ -20,6 +20,7 @@
 
 
 #include "px4lib.h"
+#include "px4lib_msgids.h"
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /*                                                                 */
@@ -666,7 +667,7 @@ void SIM::ListenerTask(void)
 
 		size = recvfrom(Socket,
 						   (char *)buffer,
-						   (size_t)&size, 0,
+						   (size_t)size, 0,
 						   (struct sockaddr*)&client,
 						   &len);
 		if(size <= 0)

@@ -9,6 +9,8 @@ extern "C" {
 ** SIM Platform Configuration Parameter Definitions
 */
 
+#define SIM_LISTENER_TASK_FLAGS        OS_ENABLE_CORE_0
+
 /** \brief Mission specific version number for SIM application
 **  
 **  \par Description:
@@ -108,6 +110,14 @@ extern "C" {
 **       This parameter must be at least 1000 (ms).
 */
 #define SIM_STARTUP_TIMEOUT_MSEC    (1000)
+
+#define SIM_MAX_MESSAGE_SIZE (1500)
+#define SIM_LISTENER_TASK_NAME "SIM_LISTENER"
+#define SIM_LISTENER_TASK_STACK_SIZE 16378
+#define SIM_LISTENER_TASK_PRIORITY   50
+#define SIM_MUTEX_NAME	"SIM_MUTEX"
+#define SIMLIB_MUTEX_SEM_NAME     "SIMLIB_MUTEX"
+#define SIM_PORT (14560)
 
 
 #ifdef __cplusplus

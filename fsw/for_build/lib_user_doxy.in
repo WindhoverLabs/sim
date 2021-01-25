@@ -8,7 +8,7 @@
 #DOXYFILE_ENCODING      = UTF-8
 PROJECT_NAME           = "Simulator Interface (SIM) Application on @BUILD_CONFIG_NAME@ User's Guide"
 PROJECT_NUMBER         = 
-OUTPUT_DIRECTORY       = @CFS_DOCS_HTML_DIR@/users_guide/apps/sim
+OUTPUT_DIRECTORY       = @CFS_DOCS_HTML_DIR@/apps/sim/users_guide
 CREATE_SUBDIRS         = NO
 OUTPUT_LANGUAGE        = English
 BRIEF_MEMBER_DESC      = YES
@@ -91,15 +91,15 @@ WARN_LOGFILE           =
 #---------------------------------------------------------------------------
 # configuration options related to the input files
 #---------------------------------------------------------------------------
-INPUT                  = @APP_DEFINITION_DIR@/../../docs/dox_src/users_guide/cfs_sim.dox
+INPUT                  = @APP_DEFINITION_DIR@/../../docs/dox_src/detailed_design/cfs_sim.dox
 INPUT                 += @APP_DEFINITION_DIR@/../src/sim_events.h
 INPUT                 += @APP_DEFINITION_DIR@/../src/sim_msg.h 
 INPUT                 += @APP_DEFINITION_DIR@/../src/sim_tbldefs.h
 INPUT                 += @CONFIG_SOURCES@
 
 #INPUT_ENCODING         = UTF-8
-FILE_PATTERNS          = *.c \
-                         *.h
+#FILE_PATTERNS          = *.c \
+#                         *.h
 RECURSIVE              = YES
 EXCLUDE                = 
 EXCLUDE_SYMLINKS       = NO
@@ -109,7 +109,7 @@ EXAMPLE_PATH           =
 EXAMPLE_PATTERNS       = *
 EXAMPLE_RECURSIVE      = NO
 IMAGE_PATH             = "./"
-IMAGE_PATH            += "@APP_DEFINITION_DIR@/../../docs/dox_src/users_guide/"
+IMAGE_PATH            += "@APP_DEFINITION_DIR@/../../docs/dox_src/detailed_design/"
 INPUT_FILTER           = 
 FILTER_PATTERNS        = 
 FILTER_SOURCE_FILES    = NO
@@ -134,7 +134,7 @@ IGNORE_PREFIX          =
 # configuration options related to the HTML output
 #---------------------------------------------------------------------------
 GENERATE_HTML          = YES
-HTML_OUTPUT            = @CFS_DOCS_HTML_DIR@/users_guide/apps/sim
+HTML_OUTPUT            = @CFS_DOCS_HTML_DIR@/apps/sim/users_guide
 HTML_FILE_EXTENSION    = .html
 HTML_HEADER            = 
 HTML_FOOTER            = 
@@ -155,7 +155,7 @@ TREEVIEW_WIDTH         = 250
 # configuration options related to the LaTeX output
 #---------------------------------------------------------------------------
 GENERATE_LATEX         = NO
-LATEX_OUTPUT           = @CFS_DOCS_LATEX_DIR@/users_guide/apps/sim
+LATEX_OUTPUT           = @CFS_DOCS_LATEX_DIR@/apps/sim/users_guide
 LATEX_CMD_NAME         = latex
 MAKEINDEX_CMD_NAME     = makeindex
 COMPACT_LATEX          = YES
@@ -185,7 +185,7 @@ MAN_LINKS              = NO
 #---------------------------------------------------------------------------
 # configuration options related to the XML output
 #---------------------------------------------------------------------------
-GENERATE_XML           = NO
+GENERATE_XML           = YES
 XML_OUTPUT             = xml
 XML_SCHEMA             = 
 XML_DTD                = 
@@ -220,8 +220,8 @@ SKIP_FUNCTION_MACROS   = YES
 #---------------------------------------------------------------------------
 # Configuration::additions related to external references   
 #---------------------------------------------------------------------------
-TAGFILES               = @CFS_DOCS_HTML_DIR@/detailed_design/cfe/cfe.tag=../../../detailed_design/cfe/
-GENERATE_TAGFILE       = @CFS_DOCS_HTML_DIR@/users_guide/apps/sim/sim.tag
+TAGFILES               = @CFS_DOCS_HTML_DIR@/cfe/cfe.tag=../../cfe/
+GENERATE_TAGFILE       = @CFS_DOCS_HTML_DIR@/apps/sim/users_guide/sim.tag
 ALLEXTERNALS           = NO
 EXTERNAL_GROUPS        = YES
 PERL_PATH              = /usr/bin/perl
