@@ -30,7 +30,7 @@
  # POSSIBILITY OF SUCH DAMAGE.
  #
  #############################################################################
-add_airliner_app_def(simlib
+buildliner_add_app_def(simlib
     FILE SIMLIB
     SOURCES
         ${CMAKE_CURRENT_SOURCE_DIR}/../public_inc/simlib.h
@@ -52,7 +52,7 @@ add_airliner_app_def(simlib
         ${PROJECT_SOURCE_DIR}/apps/sim/fsw/platform_inc
 )
 
-add_airliner_app_def(sim
+buildliner_add_app_def(sim
     FILE SIM
     SOURCES
         ${CMAKE_CURRENT_SOURCE_DIR}/../src/sim_app.cpp
@@ -74,7 +74,7 @@ add_airliner_app_def(sim
         ${PROJECT_SOURCE_DIR}/apps/sim/fsw/platform_inc
 )
 
-add_airliner_app_unit_test(sim-ut
+buildliner_add_app_unit_test(sim-ut
     UTASSERT
     NO_HELGRIND
     NO_MASSIF
